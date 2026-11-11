@@ -1,0 +1,1236 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#cfeaff">
+<title>우리 반 3D 우주 전시관</title>
+<style>
+:root{
+  --ink:#2b2f3a; --mute:#6b7280; --line:#e5e7eb; --bg:#f6f8fc; --card:#fff;
+  --orange:#e2574c; --orange2:#f08a5d; --green:#2e9b6a; --navy:#1c2550;
+  --c-star:#ff7a59; --c-planet:#3b82f6; --c-satellite:#8b5cf6; --c-asteroid:#a16207; --c-comet:#0891b2; --c-dwarf:#db2777; --c-etc:#64748b;
+  --font:"Pretendard","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--font);overscroll-behavior:none}
+body{overflow:hidden}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:17px}
+.screen{position:fixed;inset:0;display:none;overflow:auto;-webkit-overflow-scrolling:touch}
+.screen.show{display:block}
+.center{min-height:100%;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{background:var(--card);border-radius:22px;box-shadow:0 10px 40px rgba(30,40,80,.12);padding:28px;width:100%;max-width:560px}
+h1.logo{font-size:28px;margin:0 0 4px;letter-spacing:-.5px}
+.sub{color:var(--mute);margin:0 0 20px;line-height:1.6}
+label.f{display:block;font-weight:700;font-size:15px;margin:14px 0 6px}
+.inp{width:100%;padding:13px 14px;border:2px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);outline:none}
+.inp:focus{border-color:#7aa7ff}
+.code-inp{font-size:34px;letter-spacing:10px;text-align:center;font-weight:800}
+.row{display:flex;gap:10px;align-items:center}
+.row>*{flex:1}
+.btn{border:0;border-radius:14px;padding:14px 18px;font-size:17px;font-weight:800;background:#eef1f6;color:var(--ink);min-height:50px}
+.btn.pri{background:var(--orange);color:#fff}
+.btn.grn{background:var(--green);color:#fff}
+.btn.navy{background:var(--navy);color:#fff}
+.btn.sm{padding:9px 12px;font-size:14px;min-height:40px;border-radius:10px}
+.btn.wide{width:100%}
+.btn:disabled{opacity:.5}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.btnrow .btn{flex:1}
+.err{color:#c62828;font-weight:700;min-height:22px;margin-top:10px;line-height:1.5}
+.small{font-size:13px;color:var(--mute)}
+a{color:#2f6fde}
+.looks{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.look{border:3px solid transparent;border-radius:14px;background:#f1f4f9;padding:6px 0;text-align:center;font-size:26px;min-height:54px}
+.look.on{border-color:var(--orange);background:#fff1ee}
+.look .dot{display:block;width:26px;height:26px;border-radius:50%;margin:0 auto}
+.hats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+
+/* world */
+#world{background:#cfeaff;overflow:hidden}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
+.hud{position:absolute;pointer-events:none;inset:0}
+.hud *{pointer-events:auto}
+.topbar{position:absolute;left:12px;right:12px;top:calc(10px + env(safe-area-inset-top));display:flex;gap:10px;align-items:flex-start;pointer-events:none}
+.pill{pointer-events:auto;background:#fff;border-radius:999px;padding:6px 14px 6px 6px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 16px rgba(0,0,0,.12);min-width:0;flex:0 1 auto;max-width:48%}
+.pill .loc{background:#2b2f3a;color:#fff;border-radius:999px;padding:7px 12px;font-weight:800;font-size:14px;white-space:nowrap}
+.pill .ttl{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.pill .on{font-size:13px;color:var(--mute);white-space:nowrap}
+.tbtns{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.tb{border:0;border-radius:999px;background:#fff;color:var(--ink);padding:10px 16px;font-size:15px;font-weight:800;box-shadow:0 4px 16px rgba(0,0,0,.12);min-height:44px;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.tb.or{background:var(--orange);color:#fff}
+.tb.gr{background:var(--green);color:#fff}
+.bottombar{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));background:rgba(70,72,80,.72);backdrop-filter:blur(6px);border-radius:999px;padding:8px 10px;display:flex;gap:8px;align-items:center}
+.bottombar button{width:52px;height:52px;border-radius:50%;border:0;background:#fff;font-size:24px;display:flex;align-items:center;justify-content:center;color:var(--ink);font-weight:800}
+.bottombar .sep{width:1px;height:36px;background:rgba(255,255,255,.35);margin:0 4px}
+.bottombar .view{white-space:nowrap;width:auto;border-radius:999px;padding:0 16px;font-size:16px;background:var(--orange);color:#fff}
+#joy{position:absolute;left:calc(22px + env(safe-area-inset-left));bottom:calc(22px + env(safe-area-inset-bottom));width:132px;height:132px;border-radius:50%;background:rgba(255,255,255,.35);border:3px solid rgba(255,255,255,.75);touch-action:none;box-shadow:0 4px 18px rgba(0,0,0,.1)}
+#knob{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.2);pointer-events:none}
+#hint{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom));background:rgba(43,47,58,.82);color:#fff;padding:10px 16px;border-radius:14px;font-size:14px;line-height:1.5;text-align:center;max-width:min(560px,86vw);pointer-events:none;transition:opacity .6s}
+#cross{position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px;border-radius:50%;border:2px solid rgba(255,255,255,.9);box-shadow:0 0 0 1px rgba(0,0,0,.3);display:none;pointer-events:none}
+
+/* modal */
+#modal{position:fixed;inset:0;background:rgba(15,20,35,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+#modal.show{display:flex}
+#mbox{background:#fff;border-radius:22px;width:100%;max-width:760px;max-height:calc(100% - 8px);overflow:auto;-webkit-overflow-scrolling:touch;padding:22px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+#mbox.wide{max-width:1000px}
+.x{position:absolute;right:12px;top:12px;width:44px;height:44px;border-radius:50%;border:0;background:#f1f3f7;font-size:22px;font-weight:800;color:var(--ink);z-index:2}
+#ask{position:fixed;inset:0;background:rgba(15,20,35,.5);display:none;align-items:center;justify-content:center;z-index:70;padding:20px}
+#ask.show{display:flex}
+#ask .card{max-width:420px;text-align:center}
+#toast{position:fixed;left:50%;top:calc(70px + env(safe-area-inset-top));transform:translateX(-50%) translateY(-20px);background:#2b2f3a;color:#fff;padding:12px 18px;border-radius:14px;font-weight:700;font-size:15px;opacity:0;transition:.25s;z-index:90;pointer-events:none;max-width:90vw;text-align:center;line-height:1.5}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.chip{display:inline-block;padding:3px 10px;border-radius:999px;color:#fff;font-size:13px;font-weight:800}
+.up{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.pick{border:3px dashed #c9d3e3;border-radius:18px;min-height:230px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--mute);font-weight:700;background:#f8fafd;position:relative;overflow:hidden;font-size:17px;line-height:1.6;cursor:pointer}
+.pick img{max-width:100%;max-height:320px;display:block}
+.pick input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+textarea.inp{resize:vertical;min-height:84px;line-height:1.5}
+.paste{background:#fff8e6;border:2px dashed #f2c46d;border-radius:12px;padding:10px;font-size:15px;min-height:56px}
+.prog{height:10px;border-radius:99px;background:#eef1f6;overflow:hidden;margin-top:12px;display:none}
+.prog i{display:block;height:100%;width:0;background:var(--green);transition:width .3s}
+.mine{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.mine .w{display:flex;align-items:center;gap:8px;background:#f4f6fa;border-radius:12px;padding:6px 8px 6px 6px}
+.mine img{width:44px;height:44px;object-fit:cover;border-radius:8px}
+
+.det{display:grid;grid-template-columns:1.25fr 1fr;gap:20px}
+.det .ph{background:#0d1230;border-radius:16px;display:flex;align-items:center;justify-content:center;min-height:300px;overflow:hidden}
+.det .ph img{max-width:100%;max-height:62vh;display:block}
+.det h2{margin:4px 0 8px;font-size:26px}
+.det .desc{line-height:1.7;font-size:16px;white-space:pre-wrap;word-break:keep-all}
+.det .meta{color:var(--mute);font-size:14px;margin-top:10px;line-height:1.6;word-break:break-all}
+.clap{border:0;border-radius:999px;padding:10px 18px;font-size:18px;font-weight:800;background:#fff3d6;color:#9a5b00;min-height:48px}
+.clap.on{background:#ffb020;color:#fff}
+.notes{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+.note{padding:7px 0;border-bottom:1px dashed var(--line);font-size:15px;line-height:1.5;word-break:break-all}
+.note b{color:var(--orange)}
+.list-filter{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.list-filter button{border:2px solid var(--line);background:#fff;border-radius:999px;padding:7px 12px;font-weight:800;font-size:14px;min-height:40px}
+.list-filter button.on{border-color:var(--ink);background:var(--ink);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.gw{border:0;background:#f5f7fb;border-radius:14px;padding:8px;text-align:left;color:var(--ink)}
+.gw img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;background:#0d1230;display:block}
+.gw .n{font-weight:800;margin-top:6px;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gw .s{font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wallmsg{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:12px}
+.wallmsg .m{background:#fff6c9;border-radius:12px;padding:12px;font-size:15px;line-height:1.5;word-break:break-all;box-shadow:0 2px 6px rgba(0,0,0,.06);position:relative}
+.wallmsg .m:nth-child(3n+2){background:#d9f2ff}.wallmsg .m:nth-child(3n){background:#ffe1ea}
+.wallmsg .m small{display:block;color:var(--mute);margin-top:6px}
+
+/* teacher */
+#teacher .wrap{max-width:1040px;margin:0 auto;padding:22px 18px 60px}
+.tcard{background:#fff;border-radius:18px;padding:20px;box-shadow:0 6px 24px rgba(30,40,80,.08);margin-top:16px}
+.tcard h3{margin:0 0 10px}
+.exl{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.exi{border:2px solid var(--line);border-radius:14px;padding:14px;background:#fafbfe;text-align:left;font-size:15px;color:var(--ink)}
+.exi b{font-size:22px;letter-spacing:3px;display:block;margin-bottom:4px}
+.codebig{font-size:56px;font-weight:900;letter-spacing:12px;margin:6px 0}
+.qrs{display:flex;gap:20px;flex-wrap:wrap}
+.qrs>div{text-align:center;font-size:14px;font-weight:700}
+.qrbox{background:#fff;padding:10px;border-radius:12px;border:1px solid var(--line);display:inline-block}
+.qrbox img,.qrbox canvas{display:block}
+.linkbox{display:flex;gap:8px;margin:6px 0 12px}
+.linkbox input{flex:1;font-size:14px;padding:10px;border:2px solid var(--line);border-radius:10px;min-width:0}
+.sw{display:flex;align-items:center;gap:12px;padding:10px 0;font-weight:700;font-size:16px}
+.sw input{width:24px;height:24px}
+table.wt{width:100%;border-collapse:collapse;font-size:14px}
+table.wt td{border-bottom:1px solid var(--line);padding:8px 6px;vertical-align:middle}
+table.wt img{width:52px;height:52px;object-fit:cover;border-radius:8px;display:block}
+.hid{opacity:.45}
+.board{position:fixed;inset:0;background:var(--navy);color:#fff;z-index:80;display:flex;align-items:center;justify-content:center;gap:60px;flex-wrap:wrap;padding:30px;text-align:center}
+.board .codebig{font-size:110px}
+@media (max-width:820px){
+  .up,.det{grid-template-columns:1fr}
+  .pill{max-width:42%}
+  .tb{padding:10px 12px}
+}
+@media (max-width:900px){
+  .pill{max-width:36%} .pill .on{display:none}
+  .tb{padding:8px 10px;font-size:14px;gap:4px}
+  #bWall .t{display:none}
+}
+@media (max-width:640px){
+  .tb span.t{display:none}
+  .pill .on{display:none}
+  .looks{grid-template-columns:repeat(3,1fr)}
+}
+@media (max-height:520px){
+  #joy{width:110px;height:110px}
+  .bottombar button{width:46px;height:46px;font-size:21px}
+}
+.spin{width:44px;height:44px;border:5px solid #dfe6f3;border-top-color:var(--orange);border-radius:50%;animation:sp 0.9s linear infinite;margin:0 auto 14px}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- 로딩 -->
+<section id="boot" class="screen show"><div class="center"><div style="text-align:center"><div class="spin"></div><div id="bootMsg" style="color:var(--mute);font-weight:700">전시관을 준비하고 있어요…</div></div></div></section>
+
+<!-- 설정 필요 -->
+<section id="needSetup" class="screen"><div class="center"><div class="card">
+  <h1 class="logo">🛠️ 아직 설정이 안 됐어요</h1>
+  <p class="sub">선생님이 먼저 <b>setup.html</b> 페이지에서 Firebase 연결을 마치고, 만들어진 <b>config.js</b> 파일을 이 페이지와 같은 곳(GitHub)에 올려야 해요.</p>
+  <div class="btnrow"><a class="btn pri" style="text-decoration:none;text-align:center" href="setup.html">설정 페이지로 가기</a></div>
+  <p class="small" id="needSetupDetail" style="margin-top:14px"></p>
+</div></div></section>
+
+<!-- 학생 입장 -->
+<section id="join" class="screen"><div class="center"><div class="card">
+  <h1 class="logo">🪐 우리 반 3D 우주 전시관</h1>
+  <p class="sub">내가 찍은 천체 사진을 올리고, 친구들과 함께 3D 전시관을 걸어 다니며 구경해요.</p>
+  <div id="stepCode">
+    <label class="f">전시 코드 (6자리 숫자)</label>
+    <input id="jCode" class="inp code-inp" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" placeholder="000000">
+    <div class="btnrow"><button id="jCodeGo" class="btn pri wide">확인</button></div>
+  </div>
+  <div id="stepMe" style="display:none">
+    <div style="background:#f1f5ff;border-radius:12px;padding:10px 14px;font-weight:700" id="jExName"></div>
+    <div class="row" style="margin-top:4px">
+      <div style="flex:0 0 110px"><label class="f">번호</label><input id="jNum" class="inp" inputmode="numeric" pattern="[0-9]*" maxlength="2" placeholder="예) 7"></div>
+      <div><label class="f">이름</label><input id="jName" class="inp" maxlength="6" placeholder="예) 홍길동"></div>
+    </div>
+    <label class="f">옷 색깔</label>
+    <div class="looks" id="jColors"></div>
+    <label class="f">모자</label>
+    <div class="hats" id="jHats"></div>
+    <div class="btnrow"><button id="jBack" class="btn" style="flex:0 0 auto">← 코드</button><button id="jGo" class="btn pri">전시관 입장하기 🚪</button></div>
+  </div>
+  <div class="err" id="jErr"></div>
+  <p class="small" style="text-align:right;margin:8px 0 0"><a href="?t=1" id="toTeacher">선생님 페이지</a></p>
+</div></div></section>
+
+<!-- 교사 -->
+<section id="teacher" class="screen"><div class="wrap" id="tWrap"></div></section>
+
+<!-- 3D 전시관 -->
+<section id="world" class="screen">
+  <canvas id="cv" tabindex="0"></canvas>
+  <div id="cross"></div>
+  <div class="hud">
+    <div class="topbar">
+      <div class="pill"><span class="loc" id="locTag">전시관 앞</span><span class="ttl" id="exTitle"></span><span class="on" id="online"></span></div>
+      <div class="tbtns">
+        <button class="tb gr" id="bUpload">📷<span class="t">사진 올리기</span></button>
+        <button class="tb or" id="bList">🖼️<span class="t">작품 목록</span></button>
+        <button class="tb" id="bWall">💬<span class="t">방명록</span></button>
+        <button class="tb" id="bFull" title="전체 화면">⛶</button>
+        <button class="tb" id="bExit">↩<span class="t">나가기</span></button>
+      </div>
+    </div>
+    <div id="joy"><div id="knob"></div></div>
+    <div class="bottombar">
+      <button data-emo="👋" aria-label="손 흔들기">👋</button>
+      <button data-emo="❤️" aria-label="하트">❤️</button>
+      <button data-emo="👏" aria-label="박수">👏</button>
+      <i class="sep"></i>
+      <button id="zIn" aria-label="가까이">＋</button>
+      <button id="zOut" aria-label="멀리">－</button>
+      <button id="bView" class="view">1인칭</button>
+    </div>
+    <div id="hint">왼쪽 아래 동그라미를 밀어서 걷고, 화면을 끌어서 둘러봐요.<br>바닥을 누르면 그쪽으로 걸어가고, 액자를 누르면 크게 볼 수 있어요.</div>
+  </div>
+</section>
+
+<div id="modal"><div id="mbox"></div></div>
+<div id="ask"><div class="card"><div id="askMsg" style="font-size:18px;font-weight:700;line-height:1.6;white-space:pre-line"></div><div class="btnrow"><button class="btn" id="askNo">취소</button><button class="btn pri" id="askYes">확인</button></div></div></div>
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+"use strict";
+/* ============================================================
+   우리 반 3D 우주 전시관
+   - 학생이 직접 천체 사진을 올리는 3D 전시관
+   - 저장소: Firebase Realtime Database (선생님 계정의 무료 프로젝트)
+   ============================================================ */
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const PARAMS=new URLSearchParams(location.search);
+const MOCK=PARAMS.get("mock")==="1";
+const IS_TEACHER_PAGE=PARAMS.has("t")||location.hash==="#teacher";
+
+const CATS={
+  star:{name:"항성",color:"#ff7a59"}, planet:{name:"행성",color:"#3b82f6"}, satellite:{name:"위성",color:"#8b5cf6"},
+  asteroid:{name:"소행성",color:"#a16207"}, comet:{name:"혜성",color:"#0891b2"}, dwarf:{name:"왜소 행성",color:"#db2777"}, etc:{name:"기타",color:"#64748b"}
+};
+const CAT_ORDER=["star","planet","satellite","dwarf","asteroid","comet","etc"];
+const COLORS=["#ffd84d","#ff8a80","#7cc6ff","#8ee58a","#c59bff","#ffb26b"];
+const HATS=[{k:0,e:"👒",n:"밀짚모자"},{k:1,e:"🧢",n:"모자"},{k:2,e:"🧑‍🚀",n:"우주 헬멧"}];
+
+/* ---------- 작은 UI 도우미 ---------- */
+let toastT=0;
+function toast(msg,ms=2600){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),ms); }
+function show(id){ $$(".screen").forEach(s=>s.classList.toggle("show",s.id===id)); }
+let modalClose=null;
+function openModal(html,{wide=false,onClose=null}={}){
+  const b=$("#mbox"); b.className=wide?"wide":""; b.innerHTML=`<button class="x" id="mx" aria-label="닫기">✕</button>`+html; b.scrollTop=0;
+  $("#modal").classList.add("show"); $("#mx").onclick=closeModal; modalClose=onClose; if(window.World) World.pauseInput(true); return b;
+}
+function closeModal(){ $("#modal").classList.remove("show"); $("#mbox").innerHTML=""; const f=modalClose; modalClose=null; if(f) try{f();}catch(e){} if(window.World) World.pauseInput(false); }
+function isModalOpen(){ return $("#modal").classList.contains("show"); }
+function ask(msg,yes="확인",no="취소"){
+  return new Promise(res=>{ $("#askMsg").textContent=msg; $("#askYes").textContent=yes; $("#askNo").textContent=no; $("#askNo").style.display=no?"":"none";
+    $("#ask").classList.add("show"); const done=v=>{ $("#ask").classList.remove("show"); res(v); };
+    $("#askYes").onclick=()=>done(true); $("#askNo").onclick=()=>done(false); });
+}
+function withTimeout(p,ms,msg){ let t; return Promise.race([p,new Promise((_,rej)=>{t=setTimeout(()=>rej(new Error(msg||"TIMEOUT")),ms);})]).finally(()=>clearTimeout(t)); }
+function errText(e){
+  const s=String((e&&(e.code||e.message))||e);
+  if(/PERMISSION_DENIED|permission/i.test(s)) return "권한이 없어요. (사진 올리기가 꺼져 있거나, 전시가 닫혔을 수 있어요)";
+  if(/TIMEOUT/.test(s)) return "인터넷이 느려요. 잠시 후 다시 해 보세요.";
+  if(/wrong-password|invalid-credential|invalid-login|user-not-found|INVALID_LOGIN/i.test(s)) return "이메일 또는 비밀번호가 맞지 않아요.";
+  if(/too-many-requests/.test(s)) return "시도가 너무 많아요. 잠시 후 다시 해 보세요.";
+  if(/network/i.test(s)) return "인터넷 연결을 확인해 주세요.";
+  if(/admin-restricted|operation-not-allowed/.test(s)) return "Firebase에서 익명 로그인이 켜져 있지 않아요. (선생님 설정 필요)";
+  return "문제가 생겼어요: "+s;
+}
+function catKeyFromText(t){
+  const s=String(t||"").replace(/\s/g,"");
+  if(/왜소/.test(s)) return "dwarf"; if(/소행성/.test(s)) return "asteroid"; if(/위성/.test(s)) return "satellite";
+  if(/혜성/.test(s)) return "comet"; if(/항성|태양|별/.test(s)) return "star"; if(/행성/.test(s)) return "planet"; return "etc";
+}
+function parseInfo(text){
+  const out={}; let cur=null; const map={"천체이름":"name","이름":"name","분류":"cat","설명":"desc","사진출처":"src","출처":"src"};
+  String(text||"").split(/\r?\n/).forEach(line=>{
+    const m=line.match(/^\s*\[([^\]]+)\]\s*(.*)$/);
+    if(m){ const k=map[m[1].replace(/\s/g,"")]; cur=k||null; if(k) out[k]=m[2].trim(); }
+    else if(cur && line.trim()){ out[cur]=(out[cur]?out[cur]+"\n":"")+line.trim(); }
+  });
+  if(out.cat) out.catKey=catKeyFromText(out.cat);
+  return out;
+}
+
+/* ---------- 설정 읽기 ---------- */
+let CFG=null;
+function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement("script"); s.src=src; s.onload=()=>res(); s.onerror=()=>rej(new Error("load "+src)); document.head.appendChild(s); }); }
+async function loadConfig(){
+  if(MOCK) return {firebase:{mock:true},teacherEmail:"teacher@test.com"};
+  try{ await loadScript("config.js?v="+Date.now()); }catch(e){}
+  let c=window.GALLERY_CONFIG||null;
+  if(!c||!c.firebase||!c.firebase.apiKey){ try{ c=JSON.parse(localStorage.getItem("gal-cfg")||"null"); }catch(e){ c=null; } }
+  if(!c||!c.firebase||!c.firebase.apiKey||!c.firebase.databaseURL) return null;
+  c.teacherEmail=String(c.teacherEmail||"").trim().toLowerCase();
+  return c;
+}
+
+/* ---------- 데이터베이스 (Firebase / 테스트용 Mock) ---------- */
+let DB=null;
+async function makeFirebaseDB(cfg){
+  const V="9.23.0";
+  for(const m of ["app","auth","database"]) await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-${m}-compat.js`);
+  firebase.initializeApp(cfg.firebase);
+  const auth=firebase.auth(), db=firebase.database();
+  let offset=0; db.ref(".info/serverTimeOffset").on("value",s=>{offset=s.val()||0;});
+  const api={
+    TS:firebase.database.ServerValue.TIMESTAMP,
+    now:()=>Date.now()+offset,
+    get uid(){ return auth.currentUser?auth.currentUser.uid:null; },
+    get email(){ return auth.currentUser&&auth.currentUser.email?auth.currentUser.email.toLowerCase():null; },
+    ready(){ return new Promise(res=>{ const un=auth.onAuthStateChanged(u=>{ un(); res(u); }); }); },
+    async anon(){ if(auth.currentUser) return; await auth.signInAnonymously(); },
+    async login(e,p){ await auth.signInWithEmailAndPassword(e,p); },
+    async logout(){ await auth.signOut(); },
+    async get(p){ return (await db.ref(p).once("value")).val(); },
+    set:(p,v)=>db.ref(p).set(v),
+    update:(p,o)=>db.ref(p||"/").update(o),
+    remove:p=>db.ref(p).remove(),
+    key:p=>db.ref(p).push().key,
+    on(p,cb,limit){ let r=db.ref(p); if(limit) r=r.limitToLast(limit); const f=r.on("value",s=>cb(s.val()),e=>{console.warn("listen",p,e);}); return ()=>r.off("value",f); },
+    onChild(p,h){ const r=db.ref(p); const err=e=>console.warn("listen",p,e);
+      const a=r.on("child_added",s=>h.add&&h.add(s.key,s.val()),err), c=r.on("child_changed",s=>h.chg&&h.chg(s.key,s.val()),err), d=r.on("child_removed",s=>h.rem&&h.rem(s.key),err);
+      return ()=>{ r.off("child_added",a); r.off("child_changed",c); r.off("child_removed",d); }; },
+    onDisc(p){ try{ db.ref(p).onDisconnect().remove(); }catch(e){} },
+    cancelDisc(p){ try{ db.ref(p).onDisconnect().cancel(); }catch(e){} }
+  };
+  return api;
+}
+function makeMockDB(cfg){
+  // 테스트 전용: 브라우저 저장소에 흉내 낸 데이터베이스
+  const KEY="mockdb"; let mem={};
+  try{ mem=JSON.parse(localStorage.getItem(KEY)||"{}")||{}; }catch(e){ mem={}; }
+  let uid=sessionStorage.getItem("mockuid"); let email=sessionStorage.getItem("mockemail")||null;
+  const L=new Set(); const disc=new Set(); const TS={".sv":"timestamp"};
+  const segs=p=>String(p||"").split("/").filter(Boolean);
+  const clone=v=>v==null?null:JSON.parse(JSON.stringify(v,(k,x)=>(x&&typeof x==="object"&&x[".sv"]==="timestamp")?Date.now():x));
+  function getAt(p){ let o=mem; for(const s of segs(p)){ if(o==null||typeof o!=="object") return null; o=o[s]; } return o===undefined?null:clone(o); }
+  function prune(o){ if(!o||typeof o!=="object") return o; for(const k of Object.keys(o)){ if(o[k]&&typeof o[k]==="object"){ prune(o[k]); if(!Object.keys(o[k]).length) delete o[k]; } else if(o[k]==null) delete o[k]; } return o; }
+  function setAt(p,v){ const ss=segs(p); if(!ss.length){ mem=v==null?{}:clone(v); return; } let o=mem; for(let i=0;i<ss.length-1;i++){ if(o[ss[i]]==null||typeof o[ss[i]]!=="object") o[ss[i]]={}; o=o[ss[i]]; } if(v==null) delete o[ss[ss.length-1]]; else o[ss[ss.length-1]]=clone(v); prune(mem); }
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(mem)); }catch(e){ console.warn("mock save",e); } }
+  function valOf(l){ let v=getAt(l.p); if(l.limit&&v&&typeof v==="object"){ const ks=Object.keys(v).sort().slice(-l.limit); const o={}; ks.forEach(k=>o[k]=v[k]); v=o; } return v; }
+  function notify(){ for(const l of [...L]){ if(!L.has(l)) continue; const v=valOf(l); const js=JSON.stringify(v);
+      if(l.type==="value"){ if(js!==l.last){ l.last=js; l.cb(v); } }
+      else { const prev=l.prev||{}; const cur=v&&typeof v==="object"?v:{};
+        for(const k of Object.keys(cur)){ const s=JSON.stringify(cur[k]); if(!(k in prev)) l.h.add&&l.h.add(k,cur[k]); else if(prev[k]!==s) l.h.chg&&l.h.chg(k,cur[k]); }
+        for(const k of Object.keys(prev)) if(!(k in cur)) l.h.rem&&l.h.rem(k);
+        const np={}; for(const k of Object.keys(cur)) np[k]=JSON.stringify(cur[k]); l.prev=np; } } }
+  window.addEventListener("storage",e=>{ if(e.key===KEY){ try{ mem=JSON.parse(e.newValue||"{}")||{}; }catch(x){} notify(); } });
+  window.addEventListener("pagehide",()=>{ disc.forEach(p=>setAt(p,null)); save(); });
+  const write=async fn=>{ await sleep(20); if(window.__mockFail) throw new Error("PERMISSION_DENIED (mock)"); fn(); save(); notify(); };
+  const api={
+    TS, now:()=>Date.now(),
+    get uid(){ return uid; }, get email(){ return email; },
+    async ready(){ return uid?{uid}:null; },
+    async anon(){ if(!uid){ uid="u"+Math.random().toString(36).slice(2,10); sessionStorage.setItem("mockuid",uid); } },
+    async login(e,p){ await sleep(50); if(String(e).toLowerCase()!==cfg.teacherEmail||String(p).length<6) throw {code:"auth/wrong-password"}; email=e.toLowerCase(); uid="teacher-uid"; sessionStorage.setItem("mockuid",uid); sessionStorage.setItem("mockemail",email); },
+    async logout(){ uid=null; email=null; sessionStorage.removeItem("mockuid"); sessionStorage.removeItem("mockemail"); },
+    async get(p){ await sleep(10); return getAt(p); },
+    set:(p,v)=>write(()=>setAt(p,v)),
+    update:(p,o)=>write(()=>{ for(const k of Object.keys(o)) setAt((p?p+"/":"")+k,o[k]); }),
+    remove:p=>write(()=>setAt(p,null)),
+    key:()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8),
+    on(p,cb,limit){ const l={type:"value",p,cb,limit}; L.add(l); setTimeout(()=>{ if(L.has(l)){ l.last=JSON.stringify(valOf(l)); cb(valOf(l)); } },5); return ()=>L.delete(l); },
+    onChild(p,h){ const l={type:"child",p,h,prev:{}}; L.add(l); setTimeout(()=>{ if(L.has(l)) notify(); },5); return ()=>L.delete(l); },
+    onDisc(p){ disc.add(p); }, cancelDisc(p){ disc.delete(p); },
+    _mem:()=>mem, _notify:notify, _setRaw:(p,v)=>{ setAt(p,v); save(); notify(); }
+  };
+  return api;
+}
+const isTeacher=()=>!!(DB&&DB.email&&CFG&&CFG.teacherEmail&&DB.email===CFG.teacherEmail);
+
+/* ---------- 이미지 처리 ---------- */
+function loadImg(src){ return new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>rej(new Error("이미지를 열 수 없어요")); i.src=src; }); }
+function shrink(img,max,q){
+  const s=Math.min(1,max/Math.max(img.naturalWidth||img.width,img.naturalHeight||img.height));
+  const w=Math.max(1,Math.round((img.naturalWidth||img.width)*s)), h=Math.max(1,Math.round((img.naturalHeight||img.height)*s));
+  const c=document.createElement("canvas"); c.width=w; c.height=h; const x=c.getContext("2d"); x.fillStyle="#000"; x.fillRect(0,0,w,h); x.drawImage(img,0,0,w,h);
+  return {d:c.toDataURL("image/jpeg",q),w,h};
+}
+function fitSize(img,max,q,limit){ let m=max,qq=q,r=shrink(img,m,qq); let n=0; while(r.d.length>limit&&n<8){ n++; if(qq>0.55) qq-=0.08; else m=Math.round(m*0.82); r=shrink(img,m,qq); } return r; }
+async function imgFromUrlViaFetch(url){
+  const res=await withTimeout(fetch(url,{mode:"cors",referrerPolicy:"no-referrer"}),15000);
+  if(!res.ok) throw new Error("HTTP "+res.status);
+  const b=await res.blob(); const u=URL.createObjectURL(b);
+  try{ return await loadImg(u); } finally{ setTimeout(()=>URL.revokeObjectURL(u),3000); }
+}
+
+/* ============================================================
+   시작
+   ============================================================ */
+const ST={code:null,meta:null,me:null,unsub:[]};
+async function boot(){
+  try{
+    CFG=await loadConfig();
+    if(!CFG){ $("#needSetupDetail").textContent="config.js 파일을 찾지 못했어요."; show("needSetup"); return; }
+    if(typeof THREE==="undefined"){ $("#bootMsg").textContent="3D 기능을 불러오지 못했어요. 인터넷 연결을 확인하고 새로고침해 주세요."; return; }
+    DB=MOCK?makeMockDB(CFG):await withTimeout(makeFirebaseDB(CFG),20000,"TIMEOUT");
+    await withTimeout(DB.ready(),15000,"TIMEOUT");
+    // 하늘 사진관에서 넘어온 사진 정보 보관
+    const add=PARAMS.get("add");
+    if(add){ try{ sessionStorage.setItem("gal-add",add); }catch(e){} }
+    if(add){ try{ const u=new URL(location.href); u.searchParams.delete("add"); history.replaceState(null,"",u.toString()); }catch(e){} }
+    if(IS_TEACHER_PAGE){ Teacher.start(); return; }
+    if(!DB.uid) await withTimeout(DB.anon(),15000,"TIMEOUT");
+    Join.start();
+  }catch(e){
+    console.error(e);
+    $("#bootMsg").innerHTML=esc(errText(e))+'<br><br><button class="btn pri" onclick="location.reload()">다시 시도</button>';
+  }
+}
+
+/* ============================================================
+   학생 입장
+   ============================================================ */
+const Join={
+  look:{a:0,h:0},
+  start(){
+    show("join");
+    const saved=this.saved();
+    const c=(PARAMS.get("c")||"").replace(/\D/g,"").slice(0,6) || (saved&&saved.code)||"";
+    $("#jCode").value=c;
+    $("#jCode").oninput=e=>{ e.target.value=e.target.value.replace(/\D/g,"").slice(0,6); if(e.target.value.length===6) this.checkCode(); };
+    $("#jCodeGo").onclick=()=>this.checkCode();
+    $("#jCode").onkeydown=e=>{ if(e.key==="Enter") this.checkCode(); };
+    $("#jBack").onclick=()=>{ $("#stepMe").style.display="none"; $("#stepCode").style.display=""; $("#jErr").textContent=""; };
+    $("#jGo").onclick=()=>this.enter();
+    if(saved){ $("#jNum").value=saved.num||""; $("#jName").value=saved.name||""; this.look={a:saved.a|0,h:saved.h|0}; }
+    this.renderLooks();
+    if(c.length===6) this.checkCode();
+  },
+  saved(){ try{ return JSON.parse(localStorage.getItem("gal-me")||"null"); }catch(e){ return null; } },
+  renderLooks(){
+    $("#jColors").innerHTML=COLORS.map((c,i)=>`<button class="look ${i===this.look.a?"on":""}" data-a="${i}" aria-label="색 ${i+1}"><span class="dot" style="background:${c}"></span></button>`).join("");
+    $("#jHats").innerHTML=HATS.map(h=>`<button class="look ${h.k===this.look.h?"on":""}" data-h="${h.k}">${h.e}<div style="font-size:13px;font-weight:700">${h.n}</div></button>`).join("");
+    $$("#jColors .look").forEach(b=>b.onclick=()=>{ this.look.a=+b.dataset.a; this.renderLooks(); });
+    $$("#jHats .look").forEach(b=>b.onclick=()=>{ this.look.h=+b.dataset.h; this.renderLooks(); });
+  },
+  busy:false,
+  async checkCode(){
+    if(this.busy) return; const code=$("#jCode").value.trim(); $("#jErr").textContent="";
+    if(!/^\d{6}$/.test(code)){ $("#jErr").textContent="코드 6자리 숫자를 입력해 주세요."; return; }
+    this.busy=true; $("#jCodeGo").disabled=true; $("#jCodeGo").textContent="확인 중…";
+    try{
+      const meta=await withTimeout(DB.get(`ex/${code}/meta`),12000,"TIMEOUT");
+      if(!meta){ $("#jErr").textContent="그런 전시 코드가 없어요. 선생님께 코드를 다시 확인해 주세요."; return; }
+      if(meta.open===false && !isTeacher()){ $("#jErr").textContent="지금은 전시관이 닫혀 있어요."; return; }
+      ST.code=code; ST.meta=meta;
+      $("#jExName").textContent=`🏛️ ${meta.cls||""} ${meta.title||""}`.trim();
+      $("#stepCode").style.display="none"; $("#stepMe").style.display="";
+      if(isTeacher()&&!$("#jName").value){ $("#jName").value="선생님"; }
+      if(!$("#jNum").value) $("#jNum").focus(); else if(!$("#jName").value) $("#jName").focus();
+    }catch(e){ $("#jErr").textContent=errText(e); }
+    finally{ this.busy=false; $("#jCodeGo").disabled=false; $("#jCodeGo").textContent="확인"; }
+  },
+  enter(){
+    const num=$("#jNum").value.replace(/\D/g,"").slice(0,2); const name=$("#jName").value.trim().replace(/\s+/g," ").slice(0,6);
+    const teacher=isTeacher();
+    if(!teacher && !num){ $("#jErr").textContent="번호를 입력해 주세요."; $("#jNum").focus(); return; }
+    if(!name){ $("#jErr").textContent="이름을 입력해 주세요."; $("#jName").focus(); return; }
+    ST.me={num,name,a:this.look.a,h:this.look.h,teacher,nick:(num?num+"번 ":"")+name};
+    try{ localStorage.setItem("gal-me",JSON.stringify({code:ST.code,num,name,a:this.look.a,h:this.look.h})); }catch(e){}
+    Gallery.enter();
+  }
+};
+
+/* ============================================================
+   전시관(데이터 + 화면)
+   ============================================================ */
+const Gallery={
+  works:{}, hidden:{}, claps:{}, live:{},
+  enter(){
+    const c=ST.code; this.works={}; this.hidden={}; this.claps={}; this.live={};
+    show("world");
+    $("#exTitle").textContent=`${ST.meta.cls||""} ${ST.meta.title||""}`.trim();
+    World.init();
+    World.setExhibition(ST.meta);
+    World.spawnMe(ST.me); World.setWorks([]);
+    const U=ST.unsub;
+    U.push(DB.on(`ex/${c}/meta`,m=>{ if(!m){ this.kick("전시회가 삭제되었어요."); return; } ST.meta=m; $("#exTitle").textContent=`${m.cls||""} ${m.title||""}`.trim(); World.setExhibition(m); this.updateButtons();
+      if(m.open===false&&!isTeacher()) this.kick("선생님이 전시관을 닫았어요."); }));
+    U.push(DB.on(`ex/${c}/hidden`,h=>{ this.hidden=h||{}; this.refreshWorks(); }));
+    U.push(DB.on(`ex/${c}/claps`,v=>{ this.claps=v||{}; }));
+    U.push(DB.onChild(`ex/${c}/works`,{
+      add:(k,v)=>{ this.works[k]=v; this.refreshWorks(); },
+      chg:(k,v)=>{ this.works[k]=v; this.refreshWorks(); },
+      rem:k=>{ delete this.works[k]; this.refreshWorks(); }
+    }));
+    U.push(DB.onChild(`ex/${c}/live`,{
+      add:(k,v)=>{ if(k!==DB.uid){ this.live[k]=v; World.upsertOther(k,v); } },
+      chg:(k,v)=>{ if(k!==DB.uid){ this.live[k]=v; World.upsertOther(k,v); } },
+      rem:k=>{ delete this.live[k]; World.removeOther(k); }
+    }));
+    DB.onDisc(`ex/${c}/live/${DB.uid}`);
+    this.updateButtons();
+    $("#bUpload").onclick=()=>Upload.open();
+    $("#bList").onclick=()=>this.openList();
+    $("#bWall").onclick=()=>this.openWall();
+    $("#bExit").onclick=async()=>{ if(await ask("전시관에서 나갈까요?","나가기")) this.leave(); };
+    $("#bFull").onclick=()=>{ const d=document; try{ if(!d.fullscreenElement) d.documentElement.requestFullscreen().catch(()=>{}); else d.exitFullscreen(); }catch(e){} };
+    // 처음 안내
+    setTimeout(()=>{ const add=sessionStorage.getItem("gal-add");
+      if(add&&this.uploadAllowed()){ Upload.open(add); try{ sessionStorage.removeItem("gal-add"); }catch(e){} }
+      else if(!isTeacher()&&this.uploadAllowed()&&!this.myWorks().length&&!isModalOpen()){
+        openModal(`<div style="text-align:center;padding:10px"><div style="font-size:54px">📷</div><h2 style="margin:6px 0">${esc(ST.me.name)}, 어서 와요!</h2>
+          <p class="sub">천체 사진관에서 찍은 사진을 전시관에 걸어 볼까요?</p>
+          <div class="btnrow"><button class="btn" id="wLater">먼저 구경할래요</button><button class="btn grn" id="wUp">📷 사진 올리기</button></div></div>`);
+        $("#wLater").onclick=closeModal; $("#wUp").onclick=()=>Upload.open();
+      }
+    },700);
+    setTimeout(()=>{ const h=$("#hint"); if(h) h.style.opacity="0"; },9000);
+  },
+  uploadAllowed(){ return isTeacher()||(ST.meta&&ST.meta.upload!==false&&ST.meta.open!==false); },
+  updateButtons(){ $("#bUpload").style.display=this.uploadAllowed()?"":"none"; },
+  myWorks(){ return Object.entries(this.works).filter(([k,w])=>w.uid===DB.uid); },
+  visible(){
+    const t=isTeacher();
+    return Object.entries(this.works).filter(([k,w])=>t||!this.hidden[k]).map(([k,w])=>({...w,id:k,hidden:!!this.hidden[k]}))
+      .sort((a,b)=>(CAT_ORDER.indexOf(a.cat)-CAT_ORDER.indexOf(b.cat))||String(a.name).localeCompare(String(b.name),"ko")||(a.t-b.t));
+  },
+  rt:0,
+  refreshWorks(){ clearTimeout(this.rt); this.rt=setTimeout(()=>World.setWorks(this.visible()),350); },
+  kick(msg){ this.leave(true); toast(msg,4000); },
+  leave(silent){
+    try{ DB.cancelDisc(`ex/${ST.code}/live/${DB.uid}`); DB.remove(`ex/${ST.code}/live/${DB.uid}`).catch(()=>{}); }catch(e){}
+    ST.unsub.forEach(f=>{ try{f();}catch(e){} }); ST.unsub=[];
+    closeModal(); World.stop();
+    if(IS_TEACHER_PAGE) { Teacher.start(); return; }
+    show("join"); $("#stepMe").style.display=""; $("#stepCode").style.display="none";
+  },
+  sendLive(p){ if(!ST.code||!DB.uid) return; DB.set(`ex/${ST.code}/live/${DB.uid}`,p).catch(e=>console.warn("live",e)); },
+  clapCount(id){ const c=this.claps[id]; return c?Object.keys(c).length:0; },
+  openList(){
+    const all=this.visible(); let f="all";
+    const cats=CAT_ORDER.filter(c=>all.some(w=>w.cat===c));
+    const b=openModal(`<h2 style="margin:0 0 4px">🖼️ 작품 목록 <span class="small">(${all.length}점)</span></h2>
+      <p class="small" style="margin:0">작품을 누르면 그 액자 앞으로 이동해요.</p>
+      <div class="list-filter" id="lf"><button data-c="all" class="on">전체</button>${cats.map(c=>`<button data-c="${c}">${CATS[c].name}</button>`).join("")}<button data-c="mine">내 작품</button></div>
+      <div class="grid" id="lg"></div>`,{wide:true});
+    const draw=()=>{ const ls=all.filter(w=>f==="all"||(f==="mine"?w.uid===DB.uid:w.cat===f));
+      $("#lg").innerHTML=ls.length?ls.map(w=>`<button class="gw ${w.hidden?"hid":""}" data-id="${esc(w.id)}"><img src="${esc(w.th)}" alt=""><div class="n">${esc(w.name)}</div><div class="s"><span class="chip" style="background:${(CATS[w.cat]||CATS.etc).color};font-size:11px;padding:1px 7px">${(CATS[w.cat]||CATS.etc).name}</span> ${esc(w.nick||"")} · 👏${this.clapCount(w.id)}</div></button>`).join(""):`<p class="sub">아직 작품이 없어요.</p>`;
+      $$("#lg .gw").forEach(x=>x.onclick=()=>{ const id=x.dataset.id; closeModal(); World.goToWork(id); }); };
+    $$("#lf button").forEach(x=>x.onclick=()=>{ f=x.dataset.c; $$("#lf button").forEach(y=>y.classList.toggle("on",y===x)); draw(); });
+    draw();
+  },
+  openWork(id){
+    const w=this.works[id]; if(!w) return; const c=ST.code; const cat=CATS[w.cat]||CATS.etc;
+    const mine=w.uid===DB.uid, t=isTeacher();
+    openModal(`<div class="det">
+      <div class="ph" id="dph"><img id="dimg" src="${esc(w.th)}" alt="${esc(w.name)}"></div>
+      <div>
+        <span class="chip" style="background:${cat.color}">${cat.name}</span>
+        <h2>${esc(w.name)}</h2>
+        <div class="desc">${esc(w.desc||"")}</div>
+        <div class="meta">🙋 전시한 사람: <b>${esc(w.nick||"")}</b>${w.src?`<br>📷 사진 출처: ${esc(w.src)}`:""}</div>
+        <div class="btnrow" style="align-items:center">
+          <button class="clap" id="dclap">👏 <span id="dcn">0</span></button>
+          ${(mine||t)?`<button class="btn sm" id="ddel" style="flex:0 0 auto">🗑️ 삭제</button>`:""}
+          ${t?`<button class="btn sm" id="dhide" style="flex:0 0 auto">${this.hidden[id]?"👁️ 다시 보이기":"🙈 숨기기"}</button>`:""}
+        </div>
+        <div class="notes"><b>💬 한 줄 감상</b><div id="dnotes"><div class="small">불러오는 중…</div></div>
+          <div class="row" style="margin-top:8px"><input id="dni" class="inp" maxlength="60" placeholder="친구 작품에 한 줄 감상 남기기 (60자)"><button class="btn sm pri" id="dns" style="flex:0 0 auto">남기기</button></div></div>
+      </div></div>`,{wide:true,onClose:()=>{ un1&&un1(); un2&&un2(); }});
+    let un1=null,un2=null;
+    // 원본 사진
+    DB.get(`img/${c}/${id}`).then(v=>{ const im=$("#dimg"); if(v&&v.d&&im) im.src=v.d; }).catch(()=>{});
+    const drawClap=()=>{ const n=this.clapCount(id); const on=!!(this.claps[id]&&this.claps[id][DB.uid]); const b=$("#dclap"); if(!b) return; $("#dcn").textContent=n; b.classList.toggle("on",on); };
+    un1=DB.on(`ex/${c}/claps/${id}`,v=>{ this.claps[id]=v||undefined; if(!v) delete this.claps[id]; drawClap(); });
+    $("#dclap").onclick=async()=>{ const on=!!(this.claps[id]&&this.claps[id][DB.uid]);
+      try{ await DB.set(`ex/${c}/claps/${id}/${DB.uid}`,on?null:true); if(!on) World.emote("👏"); }catch(e){ toast(errText(e)); } };
+    un2=DB.on(`ex/${c}/notes/${id}`,v=>{ const el=$("#dnotes"); if(!el) return; const ls=Object.values(v||{}).sort((a,b)=>a.t-b.t).slice(-40);
+      el.innerHTML=ls.length?ls.map(n=>`<div class="note"><b>${esc(n.n)}</b> ${esc(n.m)}</div>`).join(""):`<div class="small" style="padding:6px 0">첫 감상을 남겨 주세요!</div>`; },40);
+    const send=async()=>{ const m=$("#dni").value.trim().slice(0,60); if(!m) return; $("#dns").disabled=true;
+      try{ await withTimeout(DB.set(`ex/${c}/notes/${id}/${DB.key(`ex/${c}/notes/${id}`)}`,{uid:DB.uid,n:ST.me.nick.slice(0,16),m,t:DB.TS}),12000,"TIMEOUT"); $("#dni").value=""; }
+      catch(e){ toast(errText(e)); } finally{ const b=$("#dns"); if(b) b.disabled=false; } };
+    $("#dns").onclick=send; $("#dni").onkeydown=e=>{ if(e.key==="Enter") send(); };
+    if($("#ddel")) $("#ddel").onclick=async()=>{ if(!await ask(`'${w.name}' 작품을 삭제할까요?\n삭제하면 되돌릴 수 없어요.`,"삭제")) return;
+      try{ const u={[`ex/${c}/works/${id}`]:null,[`img/${c}/${id}`]:null}; if(t){ u[`ex/${c}/claps/${id}`]=null; u[`ex/${c}/notes/${id}`]=null; u[`ex/${c}/hidden/${id}`]=null; }
+        await withTimeout(DB.update("",u),12000,"TIMEOUT"); closeModal(); toast("삭제했어요."); }catch(e){ toast(errText(e)); } };
+    if($("#dhide")) $("#dhide").onclick=async()=>{ try{ await DB.set(`ex/${c}/hidden/${id}`,this.hidden[id]?null:true); closeModal(); toast(this.hidden[id]?"다시 보이게 했어요.":"학생들에게 안 보이게 숨겼어요."); }catch(e){ toast(errText(e)); } };
+  },
+  openWall(){
+    const c=ST.code;
+    openModal(`<h2 style="margin:0 0 4px">💬 방명록</h2><p class="small" style="margin:0">전시를 본 느낌을 한 줄로 남겨요. (50자)</p>
+      <div class="row" style="margin-top:12px"><input id="wi" class="inp" maxlength="50" placeholder="예) 목성 대적점이 정말 멋졌어요!"><button class="btn pri" id="ws" style="flex:0 0 auto">남기기</button></div>
+      <div class="wallmsg" id="wl"><div class="small">불러오는 중…</div></div>`,{wide:true,onClose:()=>un&&un()});
+    const t=isTeacher();
+    const un=DB.on(`ex/${c}/wall`,v=>{ const el=$("#wl"); if(!el) return; const ls=Object.entries(v||{}).sort((a,b)=>b[1].t-a[1].t);
+      el.innerHTML=ls.length?ls.map(([k,m])=>`<div class="m">${esc(m.m)}<small>— ${esc(m.n)}</small>${t?`<button class="btn sm" data-k="${esc(k)}" style="position:absolute;right:6px;top:6px;min-height:30px;padding:2px 8px">✕</button>`:""}</div>`).join(""):`<p class="sub">아직 방명록이 비어 있어요.</p>`;
+      if(t) $$("#wl button[data-k]").forEach(b=>b.onclick=()=>DB.remove(`ex/${c}/wall/${b.dataset.k}`).catch(e=>toast(errText(e)))); },80);
+    const send=async()=>{ const m=$("#wi").value.trim().slice(0,50); if(!m) return; $("#ws").disabled=true;
+      try{ await withTimeout(DB.set(`ex/${c}/wall/${DB.key(`ex/${c}/wall`)}`,{uid:DB.uid,n:ST.me.nick.slice(0,16),m,t:DB.TS}),12000,"TIMEOUT"); $("#wi").value=""; World.emote("❤️"); }
+      catch(e){ toast(errText(e)); } finally{ const b=$("#ws"); if(b) b.disabled=false; } };
+    $("#ws").onclick=send; $("#wi").onkeydown=e=>{ if(e.key==="Enter") send(); };
+  }
+};
+
+/* ============================================================
+   사진 올리기
+   ============================================================ */
+const Upload={
+  img:null,
+  open(addRaw){
+    if(!Gallery.uploadAllowed()){ toast("지금은 사진 올리기가 꺼져 있어요."); return; }
+    this.img=null;
+    openModal(`<h2 style="margin:0 0 4px">📷 내 천체 사진 전시하기</h2>
+      <p class="small" style="margin:0 0 14px">천체 사진관에서 저장한 사진을 고르고, 복사한 설명을 붙여 넣으면 자동으로 채워져요.</p>
+      <div class="up">
+        <label class="pick" id="pick"><input type="file" accept="image/*" id="ufile"><div id="pv">📷 여기를 눌러 사진 고르기<br><span class="small">(다운로드 폴더의 천체 사진)</span></div></label>
+        <div>
+          <textarea class="inp paste" id="upaste" placeholder="📋 천체 사진관에서 복사한 설명을 여기에 길게 눌러 '붙여넣기' 하세요"></textarea>
+          <label class="f">천체 이름 *</label><input id="uname" class="inp" maxlength="30" placeholder="예) 목성">
+          <label class="f">분류 *</label><select id="ucat" class="inp">${CAT_ORDER.map(k=>`<option value="${k}">${CATS[k].name}</option>`).join("")}</select>
+          <label class="f">설명 (내가 알게 된 점)</label><textarea id="udesc" class="inp" maxlength="300" placeholder="이 천체의 특징을 써요"></textarea>
+          <label class="f">사진 출처</label><input id="usrc" class="inp" maxlength="150" placeholder="예) NASA / Wikimedia Commons">
+        </div>
+      </div>
+      <div class="prog" id="uprog"><i></i></div>
+      <div class="err" id="uerr"></div>
+      <div class="btnrow"><button class="btn" id="ucancel" style="flex:0 0 auto">닫기</button><button class="btn grn" id="ugo">🏛️ 전시관에 걸기</button></div>
+      <div id="umine"></div>`,{wide:true});
+    $("#ufile").onchange=e=>{ const f=e.target.files&&e.target.files[0]; if(f) this.useFile(f); };
+    $("#upaste").addEventListener("input",()=>this.fill(parseInfo($("#upaste").value)));
+    $("#upaste").addEventListener("paste",()=>setTimeout(()=>this.fill(parseInfo($("#upaste").value)),30));
+    $("#ucancel").onclick=closeModal; $("#ugo").onclick=()=>this.submit();
+    this.drawMine();
+    if(addRaw) this.fromSky(addRaw);
+  },
+  fill(p){
+    if(p.name) $("#uname").value=p.name.slice(0,30);
+    if(p.catKey) $("#ucat").value=p.catKey;
+    if(p.desc) $("#udesc").value=p.desc.slice(0,300);
+    if(p.src) $("#usrc").value=p.src.slice(0,150);
+    if(p.name||p.desc) toast("설명을 채웠어요! ✍️ 내 생각도 덧붙여 보세요.");
+  },
+  async useFile(f){
+    $("#uerr").textContent=""; $("#pv").innerHTML="사진을 여는 중…";
+    const u=URL.createObjectURL(f);
+    try{ const im=await loadImg(u); this.setImg(im); }
+    catch(e){ this.img=null; $("#pv").innerHTML="이 사진은 열 수 없어요.<br>다른 사진(JPG/PNG)을 골라 주세요."; }
+    finally{ setTimeout(()=>URL.revokeObjectURL(u),3000); }
+  },
+  setImg(im){
+    this.img=im; const p=shrink(im,640,0.8);
+    const pv=$("#pv"); if(pv) pv.innerHTML=`<img src="${p.d}" alt="미리보기"><div class="small" style="padding:6px">다른 사진으로 바꾸려면 다시 누르세요</div>`;
+  },
+  async fromSky(raw){
+    let a=null; try{ a=JSON.parse(raw); }catch(e){ return; }
+    this.fill({name:a.n,catKey:CATS[a.c]?a.c:catKeyFromText(a.c),desc:a.d,src:a.s});
+    $("#pv").innerHTML="천체 사진관의 사진을 가져오는 중…";
+    for(const url of (a.u||[]).slice(0,3)){
+      try{ if(!/^https:\/\/(upload\.wikimedia\.org|commons\.wikimedia\.org)\//.test(url)) continue; const im=await imgFromUrlViaFetch(url); if(!$("#pv")) return; this.setImg(im); toast("사진과 설명을 가져왔어요! '전시관에 걸기'를 누르세요."); return; }catch(e){ console.warn(e); }
+    }
+    if($("#pv")) $("#pv").innerHTML="사진을 자동으로 가져오지 못했어요.<br>📷 여기를 눌러 저장한 사진을 골라 주세요.";
+  },
+  drawMine(){
+    const ls=Gallery.myWorks(); const el=$("#umine"); if(!el) return;
+    el.innerHTML=ls.length?`<div class="f" style="font-weight:800;margin-top:18px">내가 올린 작품 (${ls.length})</div><div class="mine">${ls.map(([k,w])=>`<div class="w"><img src="${esc(w.th)}" alt=""><b>${esc(w.name)}</b><button class="btn sm" data-k="${esc(k)}" style="min-height:34px">삭제</button></div>`).join("")}</div>`:"";
+    $$("#umine button[data-k]").forEach(b=>b.onclick=async()=>{ const k=b.dataset.k; const w=Gallery.works[k]; if(!w) return;
+      if(!await ask(`'${w.name}' 작품을 삭제할까요?`,"삭제")) return;
+      try{ await withTimeout(DB.update("",{[`ex/${ST.code}/works/${k}`]:null,[`img/${ST.code}/${k}`]:null}),12000,"TIMEOUT"); delete Gallery.works[k]; this.drawMine(); toast("삭제했어요."); }catch(e){ toast(errText(e)); } });
+  },
+  busy:false,
+  async submit(){
+    if(this.busy) return;
+    const name=$("#uname").value.trim(), cat=$("#ucat").value, desc=$("#udesc").value.trim(), src=$("#usrc").value.trim();
+    const E=$("#uerr"); E.textContent="";
+    if(!this.img){ E.textContent="먼저 왼쪽에서 사진을 골라 주세요."; return; }
+    if(!name){ E.textContent="천체 이름을 써 주세요."; $("#uname").focus(); return; }
+    if(Gallery.myWorks().length>=10&&!isTeacher()){ E.textContent="한 사람이 10개까지 올릴 수 있어요. 예전 작품을 지우고 올려 주세요."; return; }
+    this.busy=true; const go=$("#ugo"); go.disabled=true; go.textContent="올리는 중…";
+    const pr=$("#uprog"); pr.style.display="block"; const bar=pr.firstElementChild; bar.style.width="15%";
+    const c=ST.code; let wid=null, imgDone=false;
+    try{
+      const full=fitSize(this.img,1280,0.82,420000); bar.style.width="35%";
+      const th=fitSize(this.img,512,0.78,110000); bar.style.width="50%";
+      wid=DB.key(`ex/${c}/works`);
+      await withTimeout(DB.set(`img/${c}/${wid}`,{uid:DB.uid,d:full.d}),40000,"TIMEOUT"); imgDone=true; bar.style.width="85%";
+      await withTimeout(DB.set(`ex/${c}/works/${wid}`,{uid:DB.uid,name:name.slice(0,30),cat,desc:desc.slice(0,300),src:src.slice(0,150),nick:ST.me.nick.slice(0,16),th:th.d,w:th.w,h:th.h,t:DB.TS}),20000,"TIMEOUT");
+      bar.style.width="100%";
+      closeModal(); toast(`'${name}' 작품을 전시관에 걸었어요! 🎉`,3500); World.emote("👏");
+      setTimeout(()=>World.goToWork(wid),900);
+    }catch(e){
+      console.error(e); E.textContent=errText(e);
+      if(imgDone&&wid) DB.remove(`img/${c}/${wid}`).catch(()=>{});
+    }finally{ this.busy=false; const g=$("#ugo"); if(g){ g.disabled=false; g.textContent="🏛️ 전시관에 걸기"; } }
+  }
+};
+
+/* ============================================================
+   3D 세계 (three.js)
+   ============================================================ */
+const World=(()=>{
+  const FLOOR=0.45, CEIL=4.4, HW=7, T=0.3, DOOR=1.3, DOORH=2.8, SP=2.4;
+  let R,scene,cam,clock,running=false,inited=false,raf=0;
+  let staticG,hallG,framesG,othersG,meAv=null;
+  let colliders=[], hallColliders=[], camBlock=[], pickables=[], floorMeshes=[];
+  let L=16, layout={slots:[],part:false}, frameById={}, texCache={};
+  const me={x:0,z:22,y:0,rot:Math.PI,moving:false,speed:0};
+  let yaw=0, pitch=0.32, dist=5.2, fp=false, fov=60;
+  const keys={}; let jx=0,jy=0, walkTo=null, inputPaused=false;
+  const others={};
+  let lastSend=0,lastSent=null,lastBeat=0, myEmo={e:"",et:0};
+  let exMeta=null, bannerTex=null, signTex=null;
+
+  const MC={}; function M(c,o){ const k=c+(o?JSON.stringify(o):""); if(!MC[k]) MC[k]=new THREE.MeshLambertMaterial(Object.assign({color:c},o||{})); return MC[k]; }
+  function flat(g){ const n=g.index?g.toNonIndexed():g; n.computeVertexNormals(); return n; }
+  function box(w,h,d,c,x,y,z,parent){ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M(c)); m.position.set(x,y,z); (parent||staticG).add(m); return m; }
+  function addCol(arr,minX,maxX,minZ,maxZ){ arr.push([minX,maxX,minZ,maxZ]); }
+
+  function canvasTex(w,h,draw){ const c=document.createElement("canvas"); c.width=w; c.height=h; const x=c.getContext("2d"); draw(x,w,h); const t=new THREE.CanvasTexture(c); t.anisotropy=4; return t; }
+  function rrect(x,X,Y,w,h,r){ x.beginPath(); x.moveTo(X+r,Y); x.arcTo(X+w,Y,X+w,Y+h,r); x.arcTo(X+w,Y+h,X,Y+h,r); x.arcTo(X,Y+h,X,Y,r); x.arcTo(X,Y,X+w,Y,r); x.closePath(); }
+  const FONT='"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif';
+  function fitText(x,t,max,size,weight){ let s=size; do{ x.font=`${weight||800} ${s}px ${FONT}`; s-=2; }while(x.measureText(t).width>max&&s>10); }
+
+  /* ---- 아바타 ---- */
+  function makeAvatar(a,h,label,isTeacherTag){
+    const g=new THREE.Group(); const col=COLORS[a%COLORS.length]||COLORS[0];
+    const body=new THREE.Mesh(flat(new THREE.CylinderGeometry(0.26,0.34,0.56,8)),M(col)); body.position.y=0.66; g.add(body);
+    const legM=M("#3d5a9e"); const l1=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,0.38,6),legM), l2=l1.clone(); l1.position.set(-0.12,0.2,0); l2.position.set(0.12,0.2,0); g.add(l1,l2);
+    const armM=M(col); const a1=new THREE.Mesh(new THREE.CylinderGeometry(0.065,0.065,0.42,6),armM), a2=a1.clone(); a1.position.set(-0.36,0.72,0); a2.position.set(0.36,0.72,0); a1.rotation.z=0.25; a2.rotation.z=-0.25; g.add(a1,a2);
+    const head=new THREE.Mesh(new THREE.SphereGeometry(0.31,16,12),M("#ffd9b8")); head.position.y=1.22; g.add(head);
+    const hair=new THREE.Mesh(new THREE.SphereGeometry(0.325,16,12,0,Math.PI*2,0,Math.PI*0.55),M("#6b4226")); hair.position.y=1.24; hair.rotation.x=-0.35; g.add(hair);
+    const eM=M("#222"); const e1=new THREE.Mesh(new THREE.SphereGeometry(0.035,8,6),eM), e2=e1.clone(); e1.position.set(-0.1,1.22,0.28); e2.position.set(0.1,1.22,0.28); g.add(e1,e2);
+    const ck=M("#ffb3a7"); const c1=new THREE.Mesh(new THREE.SphereGeometry(0.045,8,6),ck), c2=c1.clone(); c1.position.set(-0.17,1.15,0.25); c2.position.set(0.17,1.15,0.25); c1.scale.z=c2.scale.z=0.4; g.add(c1,c2);
+    if(h===0){ const br=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,0.04,20),M("#f3d9a4")); br.position.y=1.45; const tp=new THREE.Mesh(new THREE.CylinderGeometry(0.27,0.3,0.2,16),M("#f3d9a4")); tp.position.y=1.55; const bd=new THREE.Mesh(new THREE.CylinderGeometry(0.305,0.305,0.06,16),M("#ff8a80")); bd.position.y=1.48; g.add(br,tp,bd); }
+    else if(h===1){ const cp=new THREE.Mesh(new THREE.SphereGeometry(0.33,16,10,0,Math.PI*2,0,Math.PI/2),M(col)); cp.position.y=1.3; const vz=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.22,0.03,16,1,false,-Math.PI/2,Math.PI),M("#2b2f3a")); vz.position.set(0,1.31,0.22); vz.scale.z=1.3; g.add(cp,vz); }
+    else { const hm=new THREE.Mesh(new THREE.SphereGeometry(0.42,18,14),new THREE.MeshLambertMaterial({color:"#dff3ff",transparent:true,opacity:0.35})); hm.position.y=1.23; const rg=new THREE.Mesh(new THREE.TorusGeometry(0.3,0.05,8,20),M("#ffffff")); rg.rotation.x=Math.PI/2; rg.position.y=0.92; const pk=new THREE.Mesh(new THREE.BoxGeometry(0.4,0.42,0.16),M("#e9edf2")); pk.position.set(0,0.7,-0.36); g.add(hm,rg,pk); }
+    const sh=new THREE.Mesh(new THREE.CircleGeometry(0.38,18),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.16,depthWrite:false})); sh.rotation.x=-Math.PI/2; sh.position.y=0.02; g.add(sh);
+    const tag=nameSprite(label,isTeacherTag); tag.position.y=1.98; g.add(tag);
+    g.userData={l1,l2,a1,a2,body,head,tag,phase:Math.random()*6,bubble:null,bubbleT:0};
+    return g;
+  }
+  function nameSprite(t,gold){
+    const tex=canvasTex(256,64,(x,w,h)=>{ fitText(x,t,220,34,800); const tw=Math.min(236,x.measureText(t).width+28); x.fillStyle=gold?"#f59e0b":"#e2574c"; rrect(x,(w-tw)/2,6,tw,52,26); x.fill(); x.strokeStyle="#fff"; x.lineWidth=4; x.stroke(); x.fillStyle="#fff"; x.textAlign="center"; x.textBaseline="middle"; x.fillText(t,w/2,33); });
+    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false})); s.scale.set(1.2,0.3,1); s.renderOrder=5; return s;
+  }
+  function emoSprite(e){ const tex=canvasTex(128,128,(x,w,h)=>{ x.fillStyle="#fff"; x.beginPath(); x.arc(64,58,52,0,Math.PI*2); x.fill(); x.beginPath(); x.moveTo(52,104); x.lineTo(64,124); x.lineTo(76,104); x.fill(); x.font=`64px ${FONT}`; x.textAlign="center"; x.textBaseline="middle"; x.fillText(e,64,62); });
+    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false})); s.scale.set(0.7,0.7,1); s.renderOrder=6; return s; }
+  function showBubble(av,e){ const u=av.userData; if(u.bubble){ av.remove(u.bubble); u.bubble.material.map.dispose(); u.bubble.material.dispose(); } const b=emoSprite(e); b.position.y=2.55; av.add(b); u.bubble=b; u.bubbleT=2.6; }
+  function animAvatar(av,dt,moving){
+    const u=av.userData; u.phase+=dt*(moving?10:2); const s=moving?Math.sin(u.phase)*0.5:0;
+    u.l1.rotation.x=s; u.l2.rotation.x=-s; u.a1.rotation.x=-s*0.8; u.a2.rotation.x=s*0.8;
+    u.body.position.y=0.66+(moving?Math.abs(Math.cos(u.phase))*0.04:Math.sin(u.phase)*0.008);
+    if(u.bubble){ u.bubbleT-=dt; u.bubble.position.y=2.55+Math.sin((2.6-u.bubbleT)*6)*0.05; if(u.bubbleT<=0){ av.remove(u.bubble); u.bubble.material.map.dispose(); u.bubble.material.dispose(); u.bubble=null; } }
+  }
+
+  /* ---- 바깥 풍경 ---- */
+  function buildStatic(){
+    staticG=new THREE.Group(); scene.add(staticG); colliders=[];
+    const ground=new THREE.Mesh(new THREE.PlaneGeometry(200,200),M("#bfe8a8")); ground.rotation.x=-Math.PI/2; ground.userData.floor=true; staticG.add(ground); floorMeshes.push(ground);
+    // 잔디 무늬
+    for(let i=0;i<40;i++){ const p=new THREE.Mesh(new THREE.CircleGeometry(1.5+Math.random()*2.5,7),M("#b0df98")); p.rotation.x=-Math.PI/2; const a=Math.random()*Math.PI*2, r=14+Math.random()*30; p.position.set(Math.cos(a)*r,0.005,10+Math.sin(a)*r); if(Math.abs(p.position.x)<4&&p.position.z>0) continue; staticG.add(p); }
+    // 길(포석)
+    const path=new THREE.Mesh(new THREE.PlaneGeometry(7,30),M("#efe8dc")); path.rotation.x=-Math.PI/2; path.position.set(0,0.01,17.6); staticG.add(path);
+    const plaza=new THREE.Mesh(new THREE.PlaneGeometry(17,5),M("#efe8dc")); plaza.rotation.x=-Math.PI/2; plaza.position.set(0,0.011,4.2); staticG.add(plaza);
+    for(let z=3;z<33;z+=1.2){ const ln=new THREE.Mesh(new THREE.PlaneGeometry(7,0.05),M("#ddd3c4")); ln.rotation.x=-Math.PI/2; ln.position.set(0,0.015,z); staticG.add(ln); }
+    // 계단과 기단
+    box(13.4,FLOOR,1.8,"#f4efe6",0,FLOOR/2,0.9);
+    box(10,0.30,0.4,"#f1ebe1",0,0.15,2.0); box(10,0.15,0.4,"#ede6da",0,0.075,2.4);
+    // 기둥
+    for(const x of [-5.3,-3.6,-1.9,1.9,3.6,5.3]){
+      const c=new THREE.Mesh(flat(new THREE.CylinderGeometry(0.3,0.34,3.9,14)),M("#fbf8f2")); c.position.set(x,FLOOR+1.95,1.2); staticG.add(c);
+      box(0.8,0.18,0.8,"#f1ebe1",x,FLOOR+0.09,1.2); box(0.8,0.16,0.8,"#f1ebe1",x,FLOOR+3.92,1.2);
+      addCol(colliders,x-0.4,x+0.4,0.8,1.6);
+    }
+    // 처마 + 박공
+    box(13.4,0.55,1.7,"#f3ece1",0,FLOOR+4.27,0.75);
+    const sh=new THREE.Shape(); sh.moveTo(-6.9,0); sh.lineTo(6.9,0); sh.lineTo(0,1.5); sh.lineTo(-6.9,0);
+    const ped=new THREE.Mesh(flat(new THREE.ExtrudeGeometry(sh,{depth:1.7,bevelEnabled:false})),M("#f6f0e6")); ped.position.set(0,FLOOR+4.54,-0.1); staticG.add(ped);
+    // 간판
+    signTex=canvasTex(1024,128,()=>{}); const sign=new THREE.Mesh(new THREE.PlaneGeometry(6,0.42),new THREE.MeshBasicMaterial({map:signTex,transparent:true})); sign.position.set(0,FLOOR+4.27,1.61); staticG.add(sign);
+    // 문
+    const dM=M("#1f6f5f"); const d1=new THREE.Mesh(new THREE.BoxGeometry(1.25,DOORH,0.08),dM); d1.geometry.translate(0.625,0,0); d1.position.set(-DOOR,FLOOR+DOORH/2,-0.15); d1.rotation.y=1.45; addCol(colliders,-DOOR-0.2,-DOOR+0.25,-1.45,-0.1); staticG.add(d1);
+    const d2=new THREE.Mesh(new THREE.BoxGeometry(1.25,DOORH,0.08),dM); d2.geometry.translate(-0.625,0,0); d2.position.set(DOOR,FLOOR+DOORH/2,-0.15); d2.rotation.y=-1.45; addCol(colliders,DOOR-0.25,DOOR+0.2,-1.45,-0.1); staticG.add(d2);
+    const arch=new THREE.Mesh(new THREE.CircleGeometry(DOOR,24,0,Math.PI),new THREE.MeshBasicMaterial({color:"#ffe2a8"})); arch.position.set(0,FLOOR+DOORH+0.02,0.02); arch.scale.y=0.55; staticG.add(arch);
+    // 장식 창문
+    for(const x of [-4.5,4.5]){ box(1.9,2.3,0.06,"#e7dccb",x,FLOOR+1.75,0.03); const w=new THREE.Mesh(new THREE.PlaneGeometry(1.6,2.0),new THREE.MeshBasicMaterial({color:"#ffe9b8"})); w.position.set(x,FLOOR+1.75,0.07); staticG.add(w); box(0.06,2.0,0.04,"#c9bba5",x,FLOOR+1.75,0.09); box(1.6,0.06,0.04,"#c9bba5",x,FLOOR+1.95,0.09); }
+    // 배너 거치대
+    bannerTex=canvasTex(512,1024,()=>{});
+    const bn=new THREE.Group(); const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,3.3,8),M("#8a8f99")); pole.position.y=1.65; bn.add(pole);
+    const ft=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.45,0.08,12),M("#8a8f99")); ft.position.y=0.04; bn.add(ft);
+    const cloth=new THREE.Mesh(new THREE.PlaneGeometry(1.35,2.7),new THREE.MeshBasicMaterial({map:bannerTex,side:THREE.DoubleSide})); cloth.position.set(0,1.85,0.06); bn.add(cloth);
+    bn.position.set(-4.6,0,5.2); bn.rotation.y=0.35; staticG.add(bn); addCol(colliders,-5.1,-4.1,4.8,5.6);
+    // 나무 · 덤불 · 화분
+    const coneT=(x,z,s)=>{ const g=new THREE.Group(); const pot=new THREE.Mesh(flat(new THREE.CylinderGeometry(0.42*s,0.32*s,0.5*s,8)),M("#2f2f33")); pot.position.y=0.25*s; const c=new THREE.Mesh(flat(new THREE.ConeGeometry(0.8*s,2.6*s,7)),M(Math.random()<0.5?"#5cb85c":"#4fae55")); c.position.y=0.5*s+1.3*s; g.add(pot,c); g.position.set(x,0,z); staticG.add(g); addCol(colliders,x-0.45*s,x+0.45*s,z-0.45*s,z+0.45*s); };
+    const roundT=(x,z,s)=>{ const g=new THREE.Group(); const tr=new THREE.Mesh(flat(new THREE.CylinderGeometry(0.14*s,0.2*s,1.6*s,6)),M("#a0703f")); tr.position.y=0.8*s; const lf=new THREE.Mesh(flat(new THREE.IcosahedronGeometry(1.1*s,0)),M(["#6cc56c","#7ccf6a","#58b65e"][Math.floor(Math.random()*3)])); lf.position.y=2.2*s; lf.rotation.y=Math.random()*3; g.add(tr,lf); g.position.set(x,0,z); staticG.add(g); addCol(colliders,x-0.3*s,x+0.3*s,z-0.3*s,z+0.3*s); };
+    const bush=(x,z,s)=>{ const b=new THREE.Mesh(flat(new THREE.IcosahedronGeometry(0.55*s,0)),M(Math.random()<0.5?"#7fd07a":"#6cc56c")); b.position.set(x,0.4*s,z); b.rotation.y=Math.random()*3; staticG.add(b); };
+    [[-7.8,3.2],[7.8,3.2],[-4.4,9],[4.4,9],[-4.4,15],[4.4,15],[-4.4,21],[4.4,21]].forEach(([x,z])=>coneT(x,z,1));
+    [[-12,6],[12,7],[-14,14],[13,16],[-11,24],[12,26],[-18,4],[18,3],[-20,20],[19,22],[-9,32],[9,33],[-16,30],[16,31],[0,38],[-24,10],[24,12]].forEach(([x,z])=>roundT(x,z,0.9+Math.random()*0.5));
+    for(let x=-6.6;x<=6.6;x+=0.9){ if(Math.abs(x)<5.4) continue; bush(x,2.8,0.9); }
+    for(let i=0;i<14;i++){ bush(-9-Math.random()*2,-2-i*2.2,1+Math.random()*0.4); bush(9+Math.random()*2,-2-i*2.2,1+Math.random()*0.4); }
+    // 꽃
+    for(let i=0;i<60;i++){ const f=new THREE.Mesh(new THREE.SphereGeometry(0.07,6,4),M(["#ff8fb1","#ffd166","#ffffff","#c39bff"][i%4])); const s=i%2?1:-1; f.position.set(s*(4.2+Math.random()*1.2),0.12,4+Math.random()*26); staticG.add(f); }
+    // 가로등
+    for(const [x,z] of [[-3.9,12],[3.9,12],[-3.9,24],[3.9,24]]){ const p=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.08,2.6,8),M("#555a66")); p.position.set(x,1.3,z); const l=new THREE.Mesh(new THREE.SphereGeometry(0.2,10,8),new THREE.MeshBasicMaterial({color:"#fff4c2"})); l.position.set(x,2.7,z); staticG.add(p,l); addCol(colliders,x-0.15,x+0.15,z-0.15,z+0.15); }
+    // 하늘 장식: 구름
+    for(let i=0;i<10;i++){ const g=new THREE.Group(); for(let j=0;j<4;j++){ const c=new THREE.Mesh(flat(new THREE.IcosahedronGeometry(1.4+Math.random(),0)),new THREE.MeshLambertMaterial({color:"#ffffff",emissive:"#dfefff"})); c.position.set(j*1.6,Math.random()*0.6,Math.random()); g.add(c); } g.position.set(-60+Math.random()*120,18+Math.random()*10,-60+Math.random()*100); staticG.add(g); }
+  }
+  function drawBanner(){
+    if(!bannerTex||!exMeta) return; const c=bannerTex.image, x=c.getContext("2d"); const w=c.width,h=c.height;
+    const g=x.createLinearGradient(0,0,0,h); g.addColorStop(0,"#1c2550"); g.addColorStop(1,"#3a2a6b"); x.fillStyle=g; x.fillRect(0,0,w,h);
+    x.fillStyle="#fff"; for(let i=0;i<90;i++){ x.globalAlpha=Math.random()*0.8+0.2; x.fillRect(Math.random()*w,Math.random()*h,2,2); } x.globalAlpha=1;
+    x.textAlign="center"; x.fillStyle="#ffd166"; fitText(x,exMeta.cls||"우리 반",440,64,900); x.fillText(exMeta.cls||"우리 반",w/2,150);
+    x.fillStyle="#fff"; const t=exMeta.title||"태양계 천체 사진전"; const parts=t.length>9?[t.slice(0,Math.ceil(t.length/2)),t.slice(Math.ceil(t.length/2))]:[t];
+    parts.forEach((p,i)=>{ fitText(x,p,450,78,900); x.fillText(p,w/2,300+i*96); });
+    // 행성 그림
+    const cx=w/2, cy=700; const pg=x.createRadialGradient(cx-30,cy-30,10,cx,cy,110); pg.addColorStop(0,"#ffe6a6"); pg.addColorStop(1,"#d99a3d"); x.fillStyle=pg; x.beginPath(); x.arc(cx,cy,100,0,Math.PI*2); x.fill();
+    x.strokeStyle="#f6d7a0"; x.lineWidth=14; x.beginPath(); x.ellipse(cx,cy,190,46,-0.25,0,Math.PI*2); x.stroke();
+    x.fillStyle="#ffffffcc"; fitText(x,"우리 반 3D 우주 전시관",440,40,700); x.fillText("우리 반 3D 우주 전시관",w/2,940);
+    bannerTex.needsUpdate=true;
+    const s=signTex.image, y=s.getContext("2d"); y.clearRect(0,0,s.width,s.height); y.fillStyle="#7a5c3a"; y.textAlign="center"; y.textBaseline="middle"; fitText(y,"우 주 전 시 관",900,84,900); y.fillText("우 주 전 시 관",512,66); signTex.needsUpdate=true;
+  }
+
+  /* ---- 전시관 건물 (작품 수에 따라 길이가 바뀜) ---- */
+  function genSlots(len,part){
+    const s=[]; const wallIn=HW-T; const side=[], mid=[];
+    for(let z=-2.4; z>=-len+1.8-1e-6; z-=SP) side.push(z);
+    side.forEach(z=>s.push({x:-wallIn,z,ry:Math.PI/2}));                                // 왼쪽 벽 (앞→뒤)
+    for(let x=-4.8; x<=4.81; x+=SP) s.push({x,z:-len+T,ry:0});                         // 안쪽 벽
+    side.slice().reverse().forEach(z=>s.push({x:wallIn,z,ry:-Math.PI/2}));              // 오른쪽 벽 (뒤→앞)
+    if(part){ for(let z=-6.6; z>=-len+4-1e-6; z-=SP) mid.push(z);
+      mid.forEach(z=>s.push({x:0.16,z,ry:Math.PI/2})); mid.slice().reverse().forEach(z=>s.push({x:-0.16,z,ry:-Math.PI/2})); }
+    s.push({x:-4.2,z:-T,ry:Math.PI},{x:4.2,z:-T,ry:Math.PI});                          // 입구 안쪽 벽
+    return s;
+  }
+  function computeLayout(n){
+    for(let len=16; len<=26.01; len+=SP){ const s=genSlots(len,false); if(s.length>=n) return {L:len,part:false,slots:s}; }
+    for(let len=21.6; len<=200; len+=SP){ const s=genSlots(len,true); if(s.length>=n) return {L:len,part:true,slots:s}; }
+    return {L:200,part:true,slots:genSlots(200,true)};
+  }
+  function disposeGroup(g){ g.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material&&o.userData.ownMat){ if(o.material.map&&o.userData.ownMap) o.material.map.dispose(); o.material.dispose(); } }); }
+  function buildHall(){
+    if(hallG){ scene.remove(hallG); disposeGroup(hallG); }
+    hallG=new THREE.Group(); scene.add(hallG); hallColliders=[]; camBlock=[]; floorMeshes=floorMeshes.filter(m=>!m.userData.hall);
+    const H=FLOOR+CEIL, wc="#f7f1e6", oc="#f3ece1";
+    const fl=new THREE.Mesh(new THREE.BoxGeometry(HW*2,FLOOR,L),M("#d9b48a",{emissive:"#3d2c1a"})); fl.position.set(0,FLOOR/2,-L/2); hallG.add(fl); fl.userData.floor=true; fl.userData.hall=true; floorMeshes.push(fl);
+    for(let z=-1.2; z>-L; z-=1.2){ box(HW*2-0.6,0.005,0.03,"#c79f74",0,FLOOR+0.003,z,hallG); }
+    const wall=(w,h,d,x,y,z,c)=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M(c||wc,{emissive:"#4d483e"})); m.position.set(x,y,z); hallG.add(m); camBlock.push(m); m.userData.block=true; return m; };
+    wall(T,H,L,-HW+T/2,H/2,-L/2,oc); addCol(hallColliders,-HW,-HW+T,-L,0);
+    wall(T,H,L,HW-T/2,H/2,-L/2,oc); addCol(hallColliders,HW-T,HW,-L,0);
+    wall(HW*2,H,T,0,H/2,-L+T/2,oc); addCol(hallColliders,-HW,HW,-L,-L+T);
+    const sw=HW-DOOR; wall(sw,H,T,-(DOOR+sw/2),H/2,-T/2,oc); wall(sw,H,T,(DOOR+sw/2),H/2,-T/2,oc);
+    addCol(hallColliders,-HW,-DOOR,-T,0); addCol(hallColliders,DOOR,HW,-T,0);
+    wall(DOOR*2,H-(FLOOR+DOORH),T,0,FLOOR+DOORH+(H-FLOOR-DOORH)/2,-T/2,oc);
+    // 지붕과 별 천장
+    const roof=box(HW*2+0.6,0.35,L+0.6,"#e8dfd0",0,H+0.175,-L/2+0.0,hallG); camBlock.push(roof); roof.userData.block=true;
+    box(HW*2+0.8,0.12,L+0.8,"#d9cdb9",0,H+0.4,-L/2,hallG);
+    const starTex=canvasTex(512,512,(x,w,h)=>{ x.fillStyle="#1c2550"; x.fillRect(0,0,w,h); for(let i=0;i<260;i++){ x.globalAlpha=0.3+Math.random()*0.7; x.fillStyle=Math.random()<0.15?"#ffe7a3":"#ffffff"; const r=Math.random()*1.8+0.4; x.beginPath(); x.arc(Math.random()*w,Math.random()*h,r,0,Math.PI*2); x.fill(); } });
+    starTex.wrapS=starTex.wrapT=THREE.RepeatWrapping; starTex.repeat.set(2,L/7);
+    const ceil=new THREE.Mesh(new THREE.PlaneGeometry(HW*2-T*2,L-T*2),new THREE.MeshBasicMaterial({map:starTex})); ceil.userData.ownMat=true; ceil.userData.ownMap=true; ceil.rotation.x=Math.PI/2; ceil.position.set(0,H-0.01,-L/2); hallG.add(ceil);
+    // 벽 아래 몰딩 · 조명줄
+    box(0.06,0.18,L-0.6,"#e0d2bc",-HW+T+0.03,FLOOR+0.09,-L/2,hallG); box(0.06,0.18,L-0.6,"#e0d2bc",HW-T-0.03,FLOOR+0.09,-L/2,hallG);
+    // 칸막이
+    if(layout.part){ const a=-5.4, b=-L+2.8; const len=a-b; wall(0.3,3.3,len,0,FLOOR+1.65,(a+b)/2,"#efe6d6"); addCol(hallColliders,-0.15,0.15,b,a); box(0.4,0.12,len+0.1,"#e0d2bc",0,FLOOR+3.36,(a+b)/2,hallG); }
+    else { for(let z=-9; z>-L+5; z-=7){ box(2.2,0.42,0.7,"#b08060",0,FLOOR+0.21,z,hallG); addCol(hallColliders,-1.1,1.1,z-0.35,z+0.35); } }
+    // 로비: 둥근 러그, 소파, 토성 모형, 화분
+    const rug=new THREE.Mesh(new THREE.CircleGeometry(2.1,28),M("#f4a582")); rug.rotation.x=-Math.PI/2; rug.position.set(0,FLOOR+0.01,-3.2); hallG.add(rug);
+    const rug2=new THREE.Mesh(new THREE.RingGeometry(1.5,1.7,28),M("#fbd3bd")); rug2.rotation.x=-Math.PI/2; rug2.position.set(0,FLOOR+0.015,-3.2); hallG.add(rug2);
+    const sofa=(x,z,ry)=>{ const g=new THREE.Group(); const c="#5fb3a6"; const s1=new THREE.Mesh(new THREE.BoxGeometry(1.7,0.4,0.75),M(c)); s1.position.y=0.3; const s2=new THREE.Mesh(new THREE.BoxGeometry(1.7,0.6,0.2),M(c)); s2.position.set(0,0.6,-0.3); const r1=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.55,0.75),M("#4a998d")); r1.position.set(-0.85,0.37,0); const r2=r1.clone(); r2.position.x=0.85; g.add(s1,s2,r1,r2); g.position.set(x,FLOOR,z); g.rotation.y=ry; hallG.add(g); addCol(hallColliders,x-0.5,x+0.5,z-0.95,z+0.95); };
+    sofa(-3.6,-3.2,Math.PI/2); sofa(3.6,-3.2,-Math.PI/2);
+    const pot=(x,z)=>{ const p=new THREE.Mesh(flat(new THREE.CylinderGeometry(0.3,0.24,0.5,8)),M("#ffffff")); p.position.set(x,FLOOR+0.25,z); const t=new THREE.Mesh(flat(new THREE.IcosahedronGeometry(0.5,0)),M("#5cb85c")); t.position.set(x,FLOOR+1.0,z); const t2=new THREE.Mesh(flat(new THREE.IcosahedronGeometry(0.36,0)),M("#7ccf6a")); t2.position.set(x+0.15,FLOOR+1.45,z); hallG.add(p,t,t2); addCol(hallColliders,x-0.35,x+0.35,z-0.35,z+0.35); };
+    pot(-6.2,-0.9); pot(6.2,-0.9); pot(-6.2,-L+0.9); pot(6.2,-L+0.9);
+    const sat=new THREE.Group(); const sp=new THREE.Mesh(new THREE.SphereGeometry(0.62,20,14),M("#e9c27d")); const ring=new THREE.Mesh(new THREE.RingGeometry(0.85,1.25,40),new THREE.MeshLambertMaterial({color:"#f3dfb2",side:THREE.DoubleSide})); ring.userData.ownMat=true; ring.rotation.x=Math.PI/2.4; sat.add(sp,ring); sat.position.set(0,FLOOR+3.2,-3.2); hallG.add(sat); hallG.userData.sat=sat;
+    const wire=new THREE.Mesh(new THREE.CylinderGeometry(0.01,0.01,1.2,4),M("#999")); wire.position.set(0,H-0.6,-3.2); hallG.add(wire);
+    framesG=new THREE.Group(); hallG.add(framesG);
+  }
+  function labelTex(w){
+    const cat=CATS[w.cat]||CATS.etc;
+    return canvasTex(512,160,(x,W,H)=>{ x.fillStyle="#ffffff"; rrect(x,4,4,W-8,H-8,14); x.fill(); x.fillStyle=cat.color; rrect(x,20,18,120,40,20); x.fill();
+      x.fillStyle="#fff"; x.font=`800 24px ${FONT}`; x.textAlign="center"; x.textBaseline="middle"; x.fillText(cat.name,80,39);
+      x.textAlign="left"; x.fillStyle="#2b2f3a"; fitText(x,w.name,330,40,900); x.fillText(w.name,156,40);
+      x.fillStyle="#6b7280"; const sub=`${w.nick||""}${w.hidden?" · (숨김)":""}`; fitText(x,sub,470,28,700); x.fillText(sub,22,112); });
+  }
+  function photoTex(w){
+    if(texCache[w.id]&&texCache[w.id].src===w.th) return texCache[w.id].tex;
+    if(texCache[w.id]) texCache[w.id].tex.dispose();
+    const tex=new THREE.Texture(); tex.anisotropy=4; const im=new Image(); im.onload=()=>{ tex.image=im; tex.needsUpdate=true; }; im.src=w.th;
+    texCache[w.id]={tex,src:w.th}; return tex;
+  }
+  let works=[];
+  function placeFrames(){
+    if(!framesG) return; while(framesG.children.length){ const c=framesG.children.pop(); c.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.userData.ownMat){ if(o.material.map&&o.userData.ownMap) o.material.map.dispose(); o.material.dispose(); } }); }
+    pickables=[]; frameById={};
+    works.forEach((w,i)=>{
+      const s=layout.slots[i]; if(!s) return;
+      const asp=(w.w&&w.h)?w.w/w.h:1; let fw=asp>=1.25?1.5:1.2*asp, fh=fw/asp; if(fh>1.2){ fh=1.2; fw=fh*asp; }
+      const g=new THREE.Group(); g.position.set(s.x,FLOOR+1.85,s.z); g.rotation.y=s.ry;
+      const fr=new THREE.Mesh(new THREE.BoxGeometry(fw+0.2,fh+0.2,0.07),M("#5a4030")); fr.position.z=0.035; g.add(fr);
+      const mat=new THREE.Mesh(new THREE.PlaneGeometry(fw+0.08,fh+0.08),M("#ffffff")); mat.position.z=0.072; g.add(mat);
+      const pm=new THREE.MeshBasicMaterial({map:photoTex(w),color:w.hidden?0x777777:0xffffff}); pm.userData={};
+      const pic=new THREE.Mesh(new THREE.PlaneGeometry(fw,fh),pm); pic.position.z=0.075; pic.userData={wid:w.id,ownMat:true}; g.add(pic);
+      fr.userData.wid=w.id;
+      const lb=new THREE.Mesh(new THREE.PlaneGeometry(1.4,0.44),new THREE.MeshBasicMaterial({map:labelTex(w),transparent:true})); lb.userData={ownMat:true,ownMap:true,wid:w.id}; lb.position.set(0,-fh/2-0.4,0.03); g.add(lb);
+      const lamp=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.06,0.18),M("#3a3a40")); lamp.position.set(0,fh/2+0.32,0.14); g.add(lamp);
+      const glow=new THREE.Mesh(new THREE.PlaneGeometry(fw+0.5,fh+0.6),new THREE.MeshBasicMaterial({color:"#fff3cf",transparent:true,opacity:0.35,depthWrite:false})); glow.userData.ownMat=true; glow.position.z=0.01; g.add(glow);
+      framesG.add(g); pickables.push(pic,fr,lb);
+      const nx=Math.sin(s.ry), nz=Math.cos(s.ry);
+      frameById[w.id]={x:s.x,z:s.z,nx,nz,g};
+    });
+    // 새로 사라진 작품의 텍스처 정리
+    const ids=new Set(works.map(w=>w.id)); Object.keys(texCache).forEach(k=>{ if(!ids.has(k)){ texCache[k].tex.dispose(); delete texCache[k]; } });
+  }
+
+  /* ---- 입력 ---- */
+  let ptrs={}, look=null, pinch=null, joyId=null;
+  function bindInput(){
+    const cv=R.domElement, joy=$("#joy"), knob=$("#knob");
+    cv.addEventListener("contextmenu",e=>e.preventDefault());
+    cv.addEventListener("pointerdown",e=>{ if(inputPaused) return; cv.focus({preventScroll:true}); ptrs[e.pointerId]={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,t:performance.now(),moved:0};
+      try{ cv.setPointerCapture(e.pointerId); }catch(x){}
+      const ids=Object.keys(ptrs); if(ids.length===2){ const [a,b]=ids.map(i=>ptrs[i]); pinch={d:Math.hypot(a.x-b.x,a.y-b.y),dist,fov}; } });
+    cv.addEventListener("pointermove",e=>{ const p=ptrs[e.pointerId]; if(!p) return; const dx=e.clientX-p.x, dy=e.clientY-p.y; p.x=e.clientX; p.y=e.clientY; p.moved+=Math.abs(dx)+Math.abs(dy);
+      const ids=Object.keys(ptrs);
+      if(ids.length>=2&&pinch){ const [a,b]=ids.slice(0,2).map(i=>ptrs[i]); const d=Math.hypot(a.x-b.x,a.y-b.y); const r=pinch.d/Math.max(20,d); if(fp){ fov=Math.max(35,Math.min(80,pinch.fov*r)); cam.fov=effFov(); cam.updateProjectionMatrix(); } else dist=Math.max(2,Math.min(10,pinch.dist*r)); return; }
+      const k=fp?0.0045:0.006; yaw-=dx*k; pitch+=dy*(fp?0.0035:0.004); clampPitch(); });
+    const end=e=>{ const p=ptrs[e.pointerId]; if(!p) return; delete ptrs[e.pointerId]; if(Object.keys(ptrs).length<2) pinch=null;
+      if(e.type==="pointerup"&&p.moved<12&&performance.now()-p.t<500&&!inputPaused) tap(e.clientX,e.clientY); };
+    cv.addEventListener("pointerup",end); cv.addEventListener("pointercancel",end); cv.addEventListener("lostpointercapture",e=>{ if(ptrs[e.pointerId]) { delete ptrs[e.pointerId]; pinch=null; } });
+    cv.addEventListener("wheel",e=>{ e.preventDefault(); if(fp){ fov=Math.max(35,Math.min(80,fov+e.deltaY*0.03)); cam.fov=effFov(); cam.updateProjectionMatrix(); } else dist=Math.max(2,Math.min(10,dist+e.deltaY*0.004)); },{passive:false});
+    const joyMove=e=>{ const r=joy.getBoundingClientRect(); const cx=r.left+r.width/2, cy=r.top+r.height/2; let dx=e.clientX-cx, dy=e.clientY-cy; const m=r.width/2-16; const l=Math.hypot(dx,dy); if(l>m){ dx=dx/l*m; dy=dy/l*m; } knob.style.transform=`translate(${dx}px,${dy}px)`; jx=dx/m; jy=dy/m; walkTo=null; };
+    joy.addEventListener("pointerdown",e=>{ e.preventDefault(); joyId=e.pointerId; try{ joy.setPointerCapture(e.pointerId); }catch(x){} joyMove(e); });
+    joy.addEventListener("pointermove",e=>{ if(e.pointerId===joyId) joyMove(e); });
+    const joyEnd=e=>{ if(e.pointerId!==joyId) return; joyId=null; jx=jy=0; knob.style.transform=""; };
+    joy.addEventListener("pointerup",joyEnd); joy.addEventListener("pointercancel",joyEnd); joy.addEventListener("lostpointercapture",joyEnd);
+    window.addEventListener("keydown",e=>{ if(!running||inputPaused) return; const t=e.target&&e.target.tagName; if(t==="INPUT"||t==="TEXTAREA"||t==="SELECT") return; keys[e.code]=true; if(e.code.startsWith("Arrow")) e.preventDefault(); });
+    window.addEventListener("keyup",e=>{ keys[e.code]=false; });
+    window.addEventListener("blur",()=>{ for(const k in keys) keys[k]=false; jx=jy=0; });
+    $$(".bottombar [data-emo]").forEach(b=>b.onclick=()=>emote(b.dataset.emo));
+    $("#zIn").onclick=()=>{ if(fp){ fov=Math.max(35,fov-8); cam.fov=effFov(); cam.updateProjectionMatrix(); } else dist=Math.max(2,dist-1); };
+    $("#zOut").onclick=()=>{ if(fp){ fov=Math.min(80,fov+8); cam.fov=effFov(); cam.updateProjectionMatrix(); } else dist=Math.min(10,dist+1); };
+    $("#bView").onclick=()=>setFP(!fp);
+    window.addEventListener("resize",resize); window.addEventListener("orientationchange",()=>setTimeout(resize,250));
+    document.addEventListener("visibilitychange",()=>{ if(!document.hidden&&running){ clock.getDelta(); } });
+  }
+  function clampPitch(){ if(fp) pitch=Math.max(-0.9,Math.min(0.9,pitch)); else pitch=Math.max(0.02,Math.min(1.25,pitch)); }
+  function setFP(v){ fp=v; $("#bView").textContent=fp?"3인칭":"1인칭"; $("#cross").style.display=fp?"block":"none"; if(meAv) meAv.visible=!fp; pitch=fp?0.05:0.32; fov=60; cam.fov=effFov(); cam.updateProjectionMatrix(); }
+  const ray=new THREE.Raycaster(), v2=new THREE.Vector2();
+  function tap(cx,cy){
+    const r=R.domElement.getBoundingClientRect(); v2.set(((cx-r.left)/r.width)*2-1,-((cy-r.top)/r.height)*2+1); ray.setFromCamera(v2,cam);
+    const hits=ray.intersectObjects([...pickables,...camBlock,...floorMeshes],false);
+    for(const h of hits){
+      const o=h.object;
+      if(o.userData.wid){ if(h.distance<16){ Gallery.openWork(o.userData.wid); } else { walkTo={x:h.point.x+(Math.sin(o.parent.rotation.y))*2, z:h.point.z+Math.cos(o.parent.rotation.y)*2}; toast("액자에 가까이 가는 중… 🚶"); } return; }
+      if(o.userData.block) return;
+      if(o.userData.floor){ walkTo={x:h.point.x,z:h.point.z}; showMarker(h.point); return; }
+    }
+  }
+  let marker=null;
+  function showMarker(p){ if(!marker){ marker=new THREE.Mesh(new THREE.RingGeometry(0.18,0.28,24),new THREE.MeshBasicMaterial({color:"#e2574c",transparent:true,depthWrite:false})); marker.rotation.x=-Math.PI/2; scene.add(marker); } marker.position.set(p.x,p.y+0.03,p.z); marker.visible=true; marker.userData.t=1; }
+
+  /* ---- 이동 · 충돌 ---- */
+  function heightAt(x,z){
+    if(z<1.8&&z>-L&&Math.abs(x)<6.7) return FLOOR;
+    if(Math.abs(x)<5){ if(z>=1.8&&z<2.2) return 0.3; if(z>=2.2&&z<2.6) return 0.15; }
+    return 0;
+  }
+  function collide(px,pz,r){
+    const all=colliders.concat(hallColliders);
+    for(let it=0;it<3;it++){
+      for(const b of all){
+        const cx=Math.max(b[0],Math.min(px,b[1])), cz=Math.max(b[2],Math.min(pz,b[3]));
+        let dx=px-cx, dz=pz-cz; const d=Math.hypot(dx,dz);
+        if(d<r){
+          if(d>1e-6){ px=cx+dx/d*r; pz=cz+dz/d*r; }
+          else { const o=[[px-b[0],-1,0],[b[1]-px,1,0],[pz-b[2],0,-1],[b[3]-pz,0,1]].sort((a,b)=>a[0]-b[0])[0]; px+=o[1]*(o[0]+r); pz+=o[2]*(o[0]+r); }
+        }
+      }
+    }
+    px=Math.max(-40,Math.min(40,px)); pz=Math.max(-L-14,Math.min(40,pz));
+    return [px,pz];
+  }
+  let stuck=0;
+  function step(dt){
+    let mx=0,mz=0;
+    let ix=jx, iy=jy;
+    if(keys.KeyW||keys.ArrowUp) iy-=1; if(keys.KeyS||keys.ArrowDown) iy+=1; if(keys.KeyA||keys.ArrowLeft) ix-=1; if(keys.KeyD||keys.ArrowRight) ix+=1;
+    const il=Math.hypot(ix,iy); if(il>1){ ix/=il; iy/=il; }
+    if(il>0.08){ walkTo=null; const fx=-Math.sin(yaw), fz=-Math.cos(yaw), rx=Math.cos(yaw), rz=-Math.sin(yaw); mx=fx*(-iy)+rx*ix; mz=fz*(-iy)+rz*ix; }
+    else if(walkTo){ const dx=walkTo.x-me.x, dz=walkTo.z-me.z, d=Math.hypot(dx,dz); if(d<0.25){ walkTo=null; } else { const s=Math.min(1,d/0.6); mx=dx/d*s; mz=dz/d*s; } }
+    const ml=Math.hypot(mx,mz);
+    me.moving=ml>0.05;
+    if(me.moving){
+      const sp=3.4*dt; const ox=me.x, oz=me.z;
+      const [nx,nz]=collide(me.x+mx*sp,me.z+mz*sp,0.32); me.x=nx; me.z=nz;
+      const moved=Math.hypot(me.x-ox,me.z-oz);
+      if(walkTo){ if(moved<sp*0.15){ stuck+=dt; if(stuck>0.4){ walkTo=null; stuck=0; } } else stuck=0; }
+      const target=Math.atan2(mx,mz); let d=target-me.rot; while(d>Math.PI) d-=Math.PI*2; while(d<-Math.PI) d+=Math.PI*2; me.rot+=d*Math.min(1,dt*12);
+      // 3인칭에서는 카메라가 천천히 따라 돌기 (조이스틱 전진일 때만)
+    }
+    const hy=heightAt(me.x,me.z); me.y+=(hy-me.y)*Math.min(1,dt*14);
+    if(meAv){ meAv.position.set(me.x,me.y,me.z); meAv.rotation.y=me.rot; animAvatar(meAv,dt,me.moving); }
+  }
+  const tgt=new THREE.Vector3(), cpos=new THREE.Vector3(), dir=new THREE.Vector3();
+  function updateCam(){
+    if(fp){
+      cam.position.set(me.x,me.y+1.3,me.z);
+      dir.set(-Math.sin(yaw)*Math.cos(pitch),-Math.sin(pitch),-Math.cos(yaw)*Math.cos(pitch));
+      cam.lookAt(cam.position.x+dir.x,cam.position.y+dir.y,cam.position.z+dir.z);
+      if(me.moving) me.rot=Math.atan2(-Math.sin(yaw),-Math.cos(yaw));
+      return;
+    }
+    tgt.set(me.x,me.y+1.35,me.z);
+    dir.set(Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),Math.cos(yaw)*Math.cos(pitch)).normalize();
+    let d=dist;
+    ray.set(tgt,dir); ray.far=dist+0.3; const h=ray.intersectObjects(camBlock,false); ray.far=Infinity;
+    if(h.length) d=Math.max(0.6,Math.min(d,h[0].distance-0.25));
+    cpos.copy(tgt).addScaledVector(dir,d);
+    const inside=me.z<0&&Math.abs(me.x)<HW;
+    if(inside&&cpos.y>FLOOR+CEIL-0.25) cpos.y=FLOOR+CEIL-0.25;
+    if(cpos.y<me.y+0.3) cpos.y=me.y+0.3;
+    cam.position.copy(cpos); cam.lookAt(tgt);
+    if(meAv) meAv.visible=d>0.9;
+  }
+
+  /* ---- 다른 친구들 ---- */
+  function upsertOther(uid,v){
+    if(!scene||!v) return;
+    let o=others[uid];
+    const look=`${v.a|0}-${v.h|0}-${v.n}`;
+    if(o&&o.look!==look){ removeOther(uid); o=null; }
+    if(!o){ if(Object.keys(others).length>=45) return; const av=makeAvatar(v.a|0,v.h|0,String(v.n||"친구").slice(0,16),!!v.tc); av.position.set(v.x||0,heightAt(v.x||0,v.z||0),v.z||0); av.rotation.y=v.r||0; othersG.add(av); o=others[uid]={av,look,x:v.x||0,z:v.z||0,r:v.r||0,tx:v.x||0,tz:v.z||0,tr:v.r||0,et:v.et||0,t:v.t||0}; }
+    o.tx=+v.x||0; o.tz=+v.z||0; o.tr=+v.r||0; o.t=+v.t||0;
+    if(v.et&&v.et!==o.et){ o.et=v.et; if(v.e&&DB.now()-v.et<5000) showBubble(o.av,String(v.e).slice(0,4)); }
+  }
+  function removeOther(uid){ const o=others[uid]; if(!o) return; othersG.remove(o.av); o.av.traverse(x=>{ if(x.geometry) x.geometry.dispose(); if(x.isSprite){ x.material.map.dispose(); x.material.dispose(); } }); delete others[uid]; }
+  function stepOthers(dt){
+    const now=DB.now(); let n=1;
+    for(const k in others){ const o=others[k]; const fresh=now-o.t<75000; o.av.visible=fresh; if(!fresh) continue; n++;
+      const k2=Math.min(1,dt*7); const ox=o.x, oz=o.z; o.x+=(o.tx-o.x)*k2; o.z+=(o.tz-o.z)*k2;
+      let d=o.tr-o.r; while(d>Math.PI) d-=Math.PI*2; while(d<-Math.PI) d+=Math.PI*2; o.r+=d*Math.min(1,dt*10);
+      const mv=Math.hypot(o.x-ox,o.z-oz)/Math.max(dt,0.001)>0.4; const y=heightAt(o.x,o.z);
+      o.av.position.set(o.x,o.av.position.y+(y-o.av.position.y)*Math.min(1,dt*12),o.z); o.av.rotation.y=o.r; animAvatar(o.av,dt,mv); }
+    return n;
+  }
+  function emote(e){ if(!meAv) return; showBubble(meAv,e); myEmo={e,et:DB.now()}; sendLive(true); }
+  function sendLive(force){
+    const now=performance.now(); const p={n:ST.me.nick.slice(0,16),a:ST.me.a|0,h:ST.me.h|0,x:Math.round(me.x*100)/100,z:Math.round(me.z*100)/100,r:Math.round(me.rot*100)/100,t:DB.TS};
+    if(myEmo.e){ p.e=myEmo.e; p.et=myEmo.et; }
+    if(ST.me.teacher) p.tc=true;
+    const changed=!lastSent||Math.abs(p.x-lastSent.x)>0.05||Math.abs(p.z-lastSent.z)>0.05||Math.abs(p.r-lastSent.r)>0.15;
+    if(force||(changed&&now-lastSend>400)||now-lastBeat>20000){ lastSend=now; lastBeat=now; lastSent=p; Gallery.sendLive(p); }
+  }
+
+  /* ---- 루프 ---- */
+  let lastLoc="", lastOn=-1, perfT=0, perfN=0, perfAcc=0;
+  function loop(){
+    if(!running) return; raf=requestAnimationFrame(loop);
+    if(document.hidden) return;
+    const dt=Math.min(0.05,clock.getDelta());
+    if(!inputPaused) step(dt); else if(meAv) animAvatar(meAv,dt,false);
+    const n=stepOthers(dt);
+    updateCam();
+    if(hallG&&hallG.userData.sat) hallG.userData.sat.rotation.y+=dt*0.3;
+    if(marker&&marker.visible){ marker.userData.t-=dt; marker.material.opacity=Math.max(0,marker.userData.t); if(marker.userData.t<=0||!walkTo) marker.visible=false; }
+    sendLive(false);
+    const loc=(me.z<0&&Math.abs(me.x)<HW)?"전시관 안":"전시관 앞"; if(loc!==lastLoc){ lastLoc=loc; $("#locTag").textContent=loc; }
+    if(n!==lastOn){ lastOn=n; $("#online").textContent=`👥 ${n}명`; }
+    R.render(scene,cam);
+    // 느린 태블릿이면 해상도를 낮춤
+    perfAcc+=dt; perfN++; if(perfAcc>3){ const avg=perfAcc/perfN; if(avg>0.045&&R.getPixelRatio()>1){ R.setPixelRatio(1); resize(); } perfAcc=0; perfN=0; }
+  }
+  function effFov(){ return fov*(cam&&cam.aspect<1?1.2:1); }
+  function resize(){ if(!R) return; const w=window.innerWidth, h=window.innerHeight; R.setSize(w,h,false); cam.aspect=w/h; cam.fov=effFov(); cam.updateProjectionMatrix(); }
+
+  /* ---- 공개 함수 ---- */
+  function init(){
+    if(!inited){
+      inited=true;
+      R=new THREE.WebGLRenderer({canvas:$("#cv"),antialias:true,powerPreference:"high-performance"});
+      R.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
+      scene=new THREE.Scene(); scene.background=new THREE.Color("#cfeaff"); scene.fog=new THREE.Fog("#cfeaff",45,130);
+      cam=new THREE.PerspectiveCamera(fov,1,0.1,300);
+      scene.add(new THREE.HemisphereLight(0xffffff,0xb9d4b0,0.52));
+      const sun=new THREE.DirectionalLight(0xfff6e6,0.5); sun.position.set(6,12,9); scene.add(sun);
+      scene.add(new THREE.AmbientLight(0xffffff,0.12));
+      clock=new THREE.Clock();
+      buildStatic(); othersG=new THREE.Group(); scene.add(othersG);
+      layout=computeLayout(0); L=layout.L; buildHall();
+      bindInput();
+    }
+    resize(); running=true; clock.getDelta(); cancelAnimationFrame(raf); raf=requestAnimationFrame(loop);
+  }
+  function setExhibition(m){ exMeta=m; drawBanner(); }
+  function spawnMe(p){
+    if(meAv){ scene.remove(meAv); meAv.traverse(x=>{ if(x.geometry) x.geometry.dispose(); }); }
+    meAv=makeAvatar(p.a,p.h,p.nick,p.teacher); scene.add(meAv);
+    me.x=(Math.random()-0.5)*3; me.z=21+Math.random()*2; me.y=0; me.rot=Math.PI; yaw=0; pitch=0.32; dist=5.2; walkTo=null; setFP(false);
+    for(const k in others) removeOther(k);
+    lastSent=null; lastSend=0; myEmo={e:"",et:0}; sendLive(true);
+  }
+  function setWorks(list){
+    works=list; const nl=computeLayout(list.length);
+    if(nl.L!==L||nl.part!==layout.part){ layout=nl; L=nl.L; buildHall(); } else layout=nl;
+    placeFrames();
+  }
+  function goToWork(id){
+    const f=frameById[id]; if(!f){ toast("아직 액자를 준비하는 중이에요. 잠시 후 다시 눌러 주세요."); return; }
+    // 액자 정면에서 살짝 옆에 서서, 내 캐릭터가 작품을 가리지 않게 함
+    const port=cam.aspect<1, lat=port?0.85:1.3, back=port?3.3:3.0; const tx=f.nz, tz=-f.nx; const x=f.x+f.nx*back+tx*lat, z=f.z+f.nz*back+tz*lat; const [cx,cz]=collide(x,z,0.32); me.x=cx; me.z=cz; me.y=FLOOR; walkTo=null;
+    me.rot=Math.atan2(f.x-cx,f.z-cz); const al=port?-0.32:-0.55; yaw=Math.atan2(f.nx*Math.cos(al)+tx*Math.sin(al),f.nz*Math.cos(al)+tz*Math.sin(al)); pitch=fp?0.0:(port?0.4:0.12); if(!fp) dist=Math.min(dist,3.4); sendLive(true);
+  }
+  function stop(){ running=false; cancelAnimationFrame(raf); jx=jy=0; for(const k in keys) keys[k]=false; for(const k in others) removeOther(k); }
+  function pauseInput(v){ inputPaused=v; if(v){ jx=jy=0; walkTo=null; ptrs={}; pinch=null; $("#knob").style.transform=""; for(const k in keys) keys[k]=false; } }
+  return {init,setExhibition,spawnMe,setWorks,goToWork,stop,pauseInput,upsertOther,removeOther,emote,
+    _state:()=>({me:{...me},L,part:layout.part,slots:layout.slots.length,frames:Object.keys(frameById).length,others:Object.keys(others).length,fp,yaw,pitch,dist,colliders:colliders.length+hallColliders.length}),
+    _tap:tap, _frame:id=>frameById[id], _project:(x,y,z)=>{ const v=new THREE.Vector3(x,y,z).project(cam); const r=R.domElement.getBoundingClientRect(); return {x:(v.x+1)/2*r.width+r.left,y:(1-v.y)/2*r.height+r.top,z:v.z}; }};
+})();
+window.World=World;
+
+/* ============================================================
+   선생님 페이지
+   ============================================================ */
+const Teacher={
+  un:[], cur:null,
+  clear(){ this.un.forEach(f=>{ try{f();}catch(e){} }); this.un=[]; },
+  start(){
+    this.clear(); show("teacher");
+    if(!isTeacher()) return this.loginView();
+    this.listView();
+  },
+  loginView(){
+    $("#tWrap").innerHTML=`<div class="center" style="min-height:80vh"><div class="card">
+      <h1 class="logo">👩‍🏫 선생님 로그인</h1><p class="sub">설정 페이지에서 만든 선생님 계정으로 로그인해요.</p>
+      <label class="f">이메일</label><input id="tE" class="inp" type="email" autocomplete="username" value="${esc(CFG.teacherEmail||"")}">
+      <label class="f">비밀번호</label><input id="tP" class="inp" type="password" autocomplete="current-password">
+      <div class="btnrow"><button class="btn pri wide" id="tGo">로그인</button></div><div class="err" id="tErr"></div>
+      <p class="small">학생 입장 화면은 <a href="./">여기</a> · 처음 설정은 <a href="setup.html">setup.html</a></p></div></div>`;
+    const go=async()=>{ $("#tErr").textContent=""; const e=$("#tE").value.trim().toLowerCase(), p=$("#tP").value;
+      if(e!==CFG.teacherEmail){ $("#tErr").textContent="설정에 등록된 선생님 이메일이 아니에요. ("+CFG.teacherEmail+")"; return; }
+      $("#tGo").disabled=true; try{ await withTimeout(DB.login(e,p),15000,"TIMEOUT"); this.listView(); }catch(x){ $("#tErr").textContent=errText(x); } finally{ const b=$("#tGo"); if(b) b.disabled=false; } };
+    $("#tGo").onclick=go; $("#tP").onkeydown=e=>{ if(e.key==="Enter") go(); };
+  },
+  galleryLink(code){ return location.origin+location.pathname.replace(/[^/]*$/,"")+"?c="+code; },
+  skyLink(code){ const s=(localStorage.getItem("gal-sky")||"").trim(); if(!s) return ""; return s+(s.includes("?")?"&":"?")+"g="+encodeURIComponent(this.galleryLink(code)); },
+  listView(){
+    this.clear(); this.cur=null;
+    $("#tWrap").innerHTML=`<div class="row" style="align-items:center"><h1 class="logo" style="flex:1">🪐 우리 반 3D 우주 전시관 · 선생님</h1><button class="btn sm" id="tOut" style="flex:0 0 auto">로그아웃</button></div>
+      <div class="tcard"><h3>➕ 새 전시회 만들기</h3>
+        <div class="row" style="flex-wrap:wrap"><div style="min-width:180px"><label class="f">학반</label><input id="nCls" class="inp" maxlength="12" placeholder="예) 1학년 7반"></div>
+        <div style="min-width:240px"><label class="f">전시 제목</label><input id="nTtl" class="inp" maxlength="24" value="태양계 천체 사진전"></div></div>
+        <div class="btnrow"><button class="btn pri" id="nGo">전시회 만들기</button></div><div class="err" id="nErr"></div></div>
+      <div class="tcard"><h3>📂 내 전시회</h3><div class="exl" id="exl"><div class="small">불러오는 중…</div></div></div>`;
+    $("#tOut").onclick=async()=>{ await DB.logout(); this.loginView(); };
+    $("#nGo").onclick=()=>this.create();
+    this.un.push(DB.on("exlist",v=>{ const el=$("#exl"); if(!el) return; const ls=Object.entries(v||{}).sort((a,b)=>(b[1].t||0)-(a[1].t||0));
+      el.innerHTML=ls.length?ls.map(([k,e])=>`<button class="exi" data-k="${k}"><b>${k}</b>${esc(e.cls||"")} · ${esc(e.title||"")}<div class="small">${e.t?new Date(e.t).toLocaleDateString("ko-KR"):""}</div></button>`).join(""):`<p class="sub">아직 전시회가 없어요. 위에서 만들어 보세요.</p>`;
+      $$("#exl .exi").forEach(b=>b.onclick=()=>this.manage(b.dataset.k)); }));
+  },
+  async create(){
+    const cls=$("#nCls").value.trim().slice(0,12), title=$("#nTtl").value.trim().slice(0,24)||"태양계 천체 사진전"; $("#nErr").textContent="";
+    if(!cls){ $("#nErr").textContent="학반을 입력해 주세요."; return; }
+    $("#nGo").disabled=true;
+    try{
+      let code=null; for(let i=0;i<8;i++){ const c=String(100000+Math.floor(Math.random()*900000)); if(!(await DB.get(`ex/${c}/meta`))){ code=c; break; } }
+      if(!code) throw new Error("코드를 만들지 못했어요. 다시 눌러 주세요.");
+      await withTimeout(DB.update("",{[`ex/${code}/meta`]:{cls,title,open:true,upload:true,t:DB.TS},[`exlist/${code}`]:{cls,title,t:DB.TS}}),15000,"TIMEOUT");
+      this.manage(code);
+    }catch(e){ $("#nErr").textContent=errText(e); } finally{ const b=$("#nGo"); if(b) b.disabled=false; }
+  },
+  manage(code){
+    this.clear(); this.cur=code; const link=this.galleryLink(code);
+    $("#tWrap").innerHTML=`<div class="row"><button class="btn sm" id="mBack" style="flex:0 0 auto">← 목록</button><h1 class="logo" style="flex:1;margin-left:10px" id="mTitle">전시회</h1></div>
+      <div class="tcard"><div class="row" style="flex-wrap:wrap;align-items:flex-start;gap:24px">
+        <div style="flex:1 1 300px"><div class="small">전시 코드</div><div class="codebig">${code}</div>
+          <label class="f">① 전시관 바로가기 링크</label><div class="linkbox"><input readonly value="${esc(link)}" id="lk1"><button class="btn sm" data-copy="lk1">복사</button></div>
+          <label class="f">② 천체 사진관 + 전시관 연결 링크 <span class="small">(학생들이 사진관에서 찍은 사진을 바로 전시관에 올릴 수 있어요)</span></label>
+          <div class="linkbox"><input id="skyIn" placeholder="천체 사진관 주소 (예: https://아이디.github.io/scope/)" value="${esc(localStorage.getItem("gal-sky")||"")}"><button class="btn sm" id="skySave">저장</button></div>
+          <div class="linkbox"><input readonly id="lk2" value="${esc(this.skyLink(code))}" placeholder="위에 사진관 주소를 저장하면 만들어져요"><button class="btn sm" data-copy="lk2">복사</button></div>
+          <div class="btnrow"><button class="btn navy" id="mBoard">📺 칠판에 크게 띄우기</button><button class="btn grn" id="mEnter">🏛️ 전시관 들어가기</button></div>
+        </div>
+        <div class="qrs"><div><div class="qrbox" id="qr1"></div>전시관 QR</div><div><div class="qrbox" id="qr2"></div>사진관+전시관 QR</div></div>
+      </div></div>
+      <div class="tcard"><h3>⚙️ 설정</h3>
+        <label class="sw"><input type="checkbox" id="swOpen"> 전시관 열기 <span class="small">(끄면 학생들이 들어올 수 없어요)</span></label>
+        <label class="sw"><input type="checkbox" id="swUp"> 학생 사진 올리기 허용</label>
+        <div class="btnrow"><button class="btn sm" id="mEdit" style="flex:0 0 auto">✏️ 학반·제목 바꾸기</button><button class="btn sm" id="mWallClear" style="flex:0 0 auto">💬 방명록 비우기</button><button class="btn sm" id="mDel" style="flex:0 0 auto;background:#fde2e1;color:#b42318">🗑️ 전시회 삭제</button></div></div>
+      <div class="tcard"><h3>🖼️ 작품 <span class="small" id="wCnt"></span></h3><div style="overflow:auto"><table class="wt" id="wt"></table></div></div>`;
+    $("#mBack").onclick=()=>this.listView();
+    $$("[data-copy]").forEach(b=>b.onclick=()=>{ const i=$("#"+b.dataset.copy); if(!i.value) return; i.select(); try{ navigator.clipboard.writeText(i.value).then(()=>toast("복사했어요!"),()=>{ document.execCommand("copy"); toast("복사했어요!"); }); }catch(e){ document.execCommand("copy"); toast("복사했어요!"); } });
+    const drawQR=(el,txt)=>{ el.innerHTML=""; if(!txt){ el.innerHTML='<div class="small" style="width:180px;height:180px;display:flex;align-items:center;justify-content:center;text-align:center">사진관 주소를<br>저장하면 생겨요</div>'; return; } if(typeof QRCode==="undefined"){ el.innerHTML='<div class="small" style="width:180px">QR을 불러오지 못했어요.<br>링크를 복사해서 쓰세요.</div>'; return; } new QRCode(el,{text:txt,width:180,height:180,correctLevel:QRCode.CorrectLevel.M}); };
+    drawQR($("#qr1"),link); drawQR($("#qr2"),this.skyLink(code));
+    $("#skySave").onclick=()=>{ let s=$("#skyIn").value.trim(); if(s&&!/^https?:\/\//.test(s)){ toast("https:// 로 시작하는 주소를 넣어 주세요."); return; } localStorage.setItem("gal-sky",s); $("#lk2").value=this.skyLink(code); drawQR($("#qr2"),this.skyLink(code)); toast(s?"저장했어요!":"지웠어요."); };
+    $("#mBoard").onclick=()=>{ const d=document.createElement("div"); d.className="board"; d.innerHTML=`<div><div style="font-size:30px;font-weight:800" id="bdT"></div><div style="font-size:26px;margin-top:20px;opacity:.8">전시 코드</div><div class="codebig">${code}</div><div style="font-size:20px;opacity:.7">화면 아무 곳이나 누르면 닫혀요</div></div><div class="qrbox" id="bq" style="padding:16px"></div>`; document.body.appendChild(d);
+      $("#bdT").textContent=$("#mTitle").textContent; const big=this.skyLink(code)||link; if(typeof QRCode!=="undefined") new QRCode($("#bq"),{text:big,width:320,height:320,correctLevel:QRCode.CorrectLevel.M}); d.onclick=()=>d.remove(); };
+    $("#mEnter").onclick=async()=>{ const m=await DB.get(`ex/${code}/meta`); if(!m) return; ST.code=code; ST.meta=m; const s=Join.saved()||{}; ST.me={num:"",name:"선생님",a:s.a|0,h:s.h|0,teacher:true,nick:"선생님"}; this.clear(); Gallery.enter(); };
+    let meta=null;
+    this.un.push(DB.on(`ex/${code}/meta`,m=>{ if(!m){ if(this.cur===code){ toast("전시회가 없어요."); this.listView(); } return; } meta=m; $("#mTitle").textContent=`${m.cls||""} · ${m.title||""}`; $("#swOpen").checked=m.open!==false; $("#swUp").checked=m.upload!==false; }));
+    $("#swOpen").onchange=e=>DB.set(`ex/${code}/meta/open`,e.target.checked).then(()=>toast(e.target.checked?"전시관을 열었어요.":"전시관을 닫았어요.")).catch(x=>toast(errText(x)));
+    $("#swUp").onchange=e=>DB.set(`ex/${code}/meta/upload`,e.target.checked).then(()=>toast(e.target.checked?"학생 사진 올리기를 켰어요.":"학생 사진 올리기를 껐어요.")).catch(x=>toast(errText(x)));
+    $("#mEdit").onclick=()=>{ if(!meta) return; openModal(`<h2 style="margin-top:0">✏️ 학반·제목 바꾸기</h2><label class="f">학반</label><input id="eC" class="inp" maxlength="12" value="${esc(meta.cls||"")}"><label class="f">전시 제목</label><input id="eT" class="inp" maxlength="24" value="${esc(meta.title||"")}"><div class="btnrow"><button class="btn pri" id="eGo">저장</button></div>`);
+      $("#eGo").onclick=async()=>{ const cls=$("#eC").value.trim().slice(0,12), title=$("#eT").value.trim().slice(0,24); if(!cls||!title) return; try{ await DB.update("",{[`ex/${code}/meta/cls`]:cls,[`ex/${code}/meta/title`]:title,[`exlist/${code}/cls`]:cls,[`exlist/${code}/title`]:title}); closeModal(); toast("바꿨어요."); }catch(e){ toast(errText(e)); } }; };
+    $("#mWallClear").onclick=async()=>{ if(!await ask("방명록 글을 모두 지울까요?","모두 지우기")) return; try{ await DB.remove(`ex/${code}/wall`); toast("방명록을 비웠어요."); }catch(e){ toast(errText(e)); } };
+    $("#mDel").onclick=async()=>{ if(!await ask(`전시회 ${code}를 삭제할까요?\n작품·방명록이 모두 지워지고 되돌릴 수 없어요.`,"삭제")) return;
+      try{ await withTimeout(DB.update("",{[`ex/${code}`]:null,[`img/${code}`]:null,[`exlist/${code}`]:null}),20000,"TIMEOUT"); toast("삭제했어요."); this.listView(); }catch(e){ toast(errText(e)); } };
+    let hidden={};
+    const drawWorks=(ws)=>{ const el=$("#wt"); if(!el) return; const ls=Object.entries(ws||{}).sort((a,b)=>(b[1].t||0)-(a[1].t||0)); $("#wCnt").textContent=`(${ls.length}점)`;
+      el.innerHTML=ls.length?ls.map(([k,w])=>`<tr class="${hidden[k]?"hid":""}"><td style="width:60px"><img src="${esc(w.th)}" alt=""></td><td><b>${esc(w.name)}</b><div class="small">${(CATS[w.cat]||CATS.etc).name} · ${esc(w.nick||"")}</div></td><td class="small">${w.t?new Date(w.t).toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"}):""}</td>
+        <td style="text-align:right;white-space:nowrap"><button class="btn sm" data-h="${k}">${hidden[k]?"보이기":"숨기기"}</button> <button class="btn sm" data-d="${k}" style="background:#fde2e1;color:#b42318">삭제</button></td></tr>`).join(""):`<tr><td class="sub">아직 올라온 작품이 없어요.</td></tr>`;
+      $$("#wt [data-h]").forEach(b=>b.onclick=()=>DB.set(`ex/${code}/hidden/${b.dataset.h}`,hidden[b.dataset.h]?null:true).catch(e=>toast(errText(e))));
+      $$("#wt [data-d]").forEach(b=>b.onclick=async()=>{ const k=b.dataset.d; const w=(lastW||{})[k]; if(!await ask(`'${w?w.name:""}' 작품을 삭제할까요?`,"삭제")) return;
+        try{ await DB.update("",{[`ex/${code}/works/${k}`]:null,[`img/${code}/${k}`]:null,[`ex/${code}/claps/${k}`]:null,[`ex/${code}/notes/${k}`]:null,[`ex/${code}/hidden/${k}`]:null}); toast("삭제했어요."); }catch(e){ toast(errText(e)); } }); };
+    let lastW=null;
+    this.un.push(DB.on(`ex/${code}/hidden`,h=>{ hidden=h||{}; drawWorks(lastW); }));
+    this.un.push(DB.on(`ex/${code}/works`,w=>{ lastW=w; drawWorks(w); }));
+  }
+};
+
+window.addEventListener("error",e=>{ console.error("ERR",e.message); });
+boot();
+</script>
+</body>
+</html>

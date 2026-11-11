@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>우리 반 3D 우주 전시관 · 처음 설정</title>
+<style>
+:root{--ink:#2b2f3a;--mute:#6b7280;--line:#e5e7eb;--or:#e2574c;--gr:#2e9b6a}
+*{box-sizing:border-box}
+body{margin:0;background:#f6f8fc;color:var(--ink);font-family:"Pretendard","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;line-height:1.65}
+.wrap{max-width:900px;margin:0 auto;padding:26px 18px 80px}
+h1{font-size:28px;margin:0 0 6px}
+.sub{color:var(--mute);margin:0 0 18px}
+.step{background:#fff;border-radius:18px;padding:20px 22px;box-shadow:0 6px 24px rgba(30,40,80,.08);margin:16px 0}
+.step h2{font-size:20px;margin:0 0 10px;display:flex;gap:10px;align-items:center}
+.n{display:inline-flex;width:32px;height:32px;border-radius:50%;background:var(--or);color:#fff;align-items:center;justify-content:center;font-size:16px;flex:0 0 32px}
+ol,ul{margin:6px 0;padding-left:22px}
+li{margin:4px 0}
+b.ui{background:#eef2ff;border-radius:6px;padding:1px 6px;font-weight:700}
+textarea,input{width:100%;font-family:ui-monospace,Consolas,monospace;font-size:14px;border:2px solid var(--line);border-radius:12px;padding:12px;background:#fff;color:var(--ink)}
+input{font-family:inherit;font-size:16px}
+textarea{min-height:170px}
+label{display:block;font-weight:700;margin:12px 0 6px}
+.btn{border:0;border-radius:12px;padding:12px 18px;font-size:16px;font-weight:800;background:#eef1f6;color:var(--ink);cursor:pointer;font-family:inherit}
+.btn.pri{background:var(--or);color:#fff}.btn.gr{background:var(--gr);color:#fff}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.msg{margin-top:12px;padding:12px 14px;border-radius:12px;display:none;white-space:pre-line}
+.msg.ok{display:block;background:#e7f7ee;color:#14532d}.msg.bad{display:block;background:#fdecec;color:#991b1b}.msg.info{display:block;background:#eef4ff;color:#1e3a8a}
+pre{background:#0f172a;color:#e2e8f0;border-radius:12px;padding:14px;overflow:auto;font-size:13px;max-height:340px}
+.note{font-size:14px;color:var(--mute)}
+.warn{background:#fff7e6;border:1px solid #f6d58e;border-radius:12px;padding:10px 14px;font-size:14px}
+</style>
+</head>
+<body><div class="wrap">
+<h1>🛠️ 우리 반 3D 우주 전시관 · 처음 설정</h1>
+<p class="sub">한 번만 하면 돼요 (약 10분). 학생들이 올린 사진은 <b>선생님 Google 계정의 무료 Firebase 저장소</b>에 저장돼요. 무료(Spark) 요금제라 결제 정보가 필요 없어요.</p>
+
+<div class="step"><h2><span class="n">1</span>Firebase 프로젝트 만들기</h2>
+<ol>
+<li><a href="https://console.firebase.google.com/" target="_blank" rel="noopener">console.firebase.google.com</a> 에 학교(또는 개인) Google 계정으로 로그인</li>
+<li><b class="ui">프로젝트 만들기</b> (또는 <b class="ui">Firebase 프로젝트 시작하기</b>) → 이름 예: <code>space-gallery</code> → Google 애널리틱스는 <b>사용 안 함</b> → 만들기</li>
+</ol></div>
+
+<div class="step"><h2><span class="n">2</span>로그인 방법 켜기 (Authentication)</h2>
+<ol>
+<li>왼쪽 메뉴 <b class="ui">빌드(Build)</b> → <b class="ui">Authentication</b> → <b class="ui">시작하기</b></li>
+<li><b class="ui">로그인 방법(Sign-in method)</b> 탭에서 <b>익명(Anonymous)</b> → 사용 설정 → 저장 <span class="note">(학생용: 학생은 계정이 필요 없어요)</span></li>
+<li><b class="ui">새 제공업체 추가</b> → <b>이메일/비밀번호</b> → 사용 설정 → 저장 <span class="note">(선생님용)</span></li>
+</ol></div>
+
+<div class="step"><h2><span class="n">3</span>데이터베이스 만들기 (Realtime Database)</h2>
+<ol>
+<li>왼쪽 메뉴 <b class="ui">빌드</b> → <b class="ui">Realtime Database</b> → <b class="ui">데이터베이스 만들기</b></li>
+<li>위치: <b>싱가포르 (asia-southeast1)</b> 선택 → <b>잠금 모드로 시작</b> → 사용 설정</li>
+<li>화면 위쪽에 보이는 주소(<code>https://….firebasedatabase.app</code>)를 기억해 두세요.</li>
+</ol>
+<p class="warn">⚠️ <b>Firestore Database</b>가 아니라 <b>Realtime Database</b>예요.</p></div>
+
+<div class="step"><h2><span class="n">4</span>웹 앱 등록하고 설정값 복사</h2>
+<ol>
+<li>왼쪽 위 ⚙️(톱니) → <b class="ui">프로젝트 설정</b> → 아래쪽 <b class="ui">내 앱</b>에서 <b>&lt;/&gt;</b>(웹) 아이콘</li>
+<li>앱 닉네임 아무거나 (예: gallery) → Firebase 호스팅은 체크하지 않음 → <b class="ui">앱 등록</b></li>
+<li>나오는 코드 중 <code>const firebaseConfig = { … };</code> 부분을 통째로 복사해서 아래에 붙여 넣기</li>
+</ol>
+<label>firebaseConfig 붙여넣기</label>
+<textarea id="cfgIn" placeholder='const firebaseConfig = {
+  apiKey: "AIza...",
+  authDomain: "space-gallery.firebaseapp.com",
+  databaseURL: "https://space-gallery-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "space-gallery",
+  ...
+};'></textarea>
+<label>Realtime Database 주소 <span class="note">(위 코드에 databaseURL이 없을 때만 직접 입력)</span></label>
+<input id="dbUrl" placeholder="https://space-gallery-default-rtdb.asia-southeast1.firebasedatabase.app">
+</div>
+
+<div class="step"><h2><span class="n">5</span>선생님 계정 만들기 + 연결 확인</h2>
+<p class="note">전시회를 만들고 관리할 때 쓰는 선생님 전용 계정이에요. 실제로 쓰는 이메일 주소면 돼요. (Google 비밀번호와 다르게 정하세요)</p>
+<label>선생님 이메일</label><input id="tEmail" type="email" placeholder="teacher@example.com">
+<label>비밀번호 (6자 이상)</label><input id="tPw" type="password">
+<div class="row"><button class="btn pri" id="go1">① 연결 확인 · 선생님 계정 만들기</button></div>
+<div class="msg" id="m1"></div>
+</div>
+
+<div class="step" id="s6" style="opacity:.45"><h2><span class="n">6</span>보안 규칙 붙여넣기</h2>
+<p>아래 규칙을 복사해서 Firebase의 <b class="ui">Realtime Database</b> → <b class="ui">규칙(Rules)</b> 탭에 <b>원래 내용을 모두 지우고</b> 붙여 넣은 뒤 <b class="ui">게시</b>를 누르세요.<br>
+<span class="note">학생은 자기 사진만 올리고 지울 수 있고, 전시회 관리(숨기기·삭제·설정)는 선생님 계정만 할 수 있게 해 줘요.</span></p>
+<pre id="rules">(5단계를 먼저 해 주세요)</pre>
+<div class="row"><button class="btn" id="cpRules">📋 규칙 복사</button><button class="btn pri" id="go2">② 규칙 게시했어요 → 확인</button></div>
+<div class="msg" id="m2"></div>
+</div>
+
+<div class="step" id="s7" style="opacity:.45"><h2><span class="n">7</span>config.js 파일을 GitHub에 올리기</h2>
+<p>아래 버튼으로 <b>config.js</b>를 내려받아, <b>index.html · setup.html과 같은 GitHub 저장소(같은 폴더)</b>에 올려 주세요. (<b class="ui">Add file</b> → <b class="ui">Upload files</b>)<br>
+1~2분 뒤 GitHub Pages에 반영되면 끝!</p>
+<pre id="cfgOut">(6단계를 먼저 해 주세요)</pre>
+<div class="row"><button class="btn gr" id="dl">⬇️ config.js 내려받기</button><button class="btn" id="cpCfg">📋 내용 복사</button><a class="btn pri" href="index.html?t=1" style="text-decoration:none">👩‍🏫 선생님 페이지로 가기</a></div>
+<p class="note">💡 이 브라우저에는 설정이 저장돼서 config.js를 올리기 전에도 선생님 페이지를 쓸 수 있어요. 학생 태블릿에서는 config.js가 올라가야 열려요.</p>
+<p class="note">ℹ️ firebaseConfig의 apiKey는 비밀번호가 아니라 “어느 프로젝트인지” 알려주는 공개 값이에요. 데이터는 6단계의 보안 규칙이 지켜 줘요.</p>
+</div>
+</div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+let CFG=null, EMAIL="", app=null;
+function msg(id,cls,t){ const m=$(id); m.className="msg "+cls; m.textContent=t; }
+function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=()=>rej(new Error("Firebase 프로그램을 불러오지 못했어요. 인터넷 연결을 확인해 주세요.")); document.head.appendChild(s); }); }
+function parseCfg(t){
+  const o={}; for(const k of ["apiKey","authDomain","databaseURL","projectId","storageBucket","messagingSenderId","appId"]){
+    const m=t.match(new RegExp("[\"']?"+k+"[\"']?\\s*:\\s*[\"']([^\"']+)[\"']")); if(m) o[k]=m[1].trim(); }
+  return o;
+}
+function rulesText(email){
+  const T=`auth != null && auth.token.email === '${email}'`;
+  const own=`auth != null && (data.exists() ? (data.child('uid').val() === auth.uid && !newData.exists()) : (newData.child('uid').val() === auth.uid && root.child('ex').child($code).child('meta').child('upload').val() === true && root.child('ex').child($code).child('meta').child('open').val() === true))`;
+  const open=`root.child('ex').child($code).child('meta').child('open').val() === true`;
+  const S=(n)=>({".validate":`newData.isString() && newData.val().length <= ${n}`});
+  const N={".validate":"newData.isNumber()"};
+  const r={rules:{
+    "ping":{".read":"auth != null",".write":T},
+    "exlist":{".read":T,".write":T},
+    "ex":{"$code":{
+      ".read":"auth != null", ".write":T,
+      "works":{"$wid":{".write":own,".validate":"newData.hasChildren(['uid','name','cat','th','t'])",
+        "uid":S(128),"name":{".validate":"newData.isString() && newData.val().length >= 1 && newData.val().length <= 30"},
+        "cat":S(10),"desc":S(300),"src":S(150),"nick":S(16),"th":S(160000),"w":N,"h":N,"t":N,"$other":{".validate":false}}},
+      "live":{"$uid":{".write":`auth != null && auth.uid === $uid && (!newData.exists() || ${open})`,".validate":"newData.hasChildren(['n','x','z','t'])",
+        "n":S(16),"a":N,"h":N,"x":N,"z":N,"r":N,"t":N,"e":S(4),"et":N,"tc":{".validate":"newData.isBoolean()"},"$other":{".validate":false}}},
+      "claps":{"$wid":{"$uid":{".write":"auth != null && auth.uid === $uid",".validate":"newData.val() === true"}}},
+      "notes":{"$wid":{"$nid":{".write":`auth != null && !data.exists() && newData.child('uid').val() === auth.uid && ${open}`,".validate":"newData.hasChildren(['uid','n','m','t'])",
+        "uid":S(128),"n":S(16),"m":{".validate":"newData.isString() && newData.val().length >= 1 && newData.val().length <= 60"},"t":N,"$other":{".validate":false}}}},
+      "wall":{"$mid":{".write":`auth != null && !data.exists() && newData.child('uid').val() === auth.uid && ${open}`,".validate":"newData.hasChildren(['uid','n','m','t'])",
+        "uid":S(128),"n":S(16),"m":{".validate":"newData.isString() && newData.val().length >= 1 && newData.val().length <= 50"},"t":N,"$other":{".validate":false}}}
+    }},
+    "img":{"$code":{".read":"auth != null",".write":T,
+      "$wid":{".write":own,".validate":"newData.hasChildren(['uid','d']) && newData.child('d').isString() && newData.child('d').val().length <= 600000",
+        "uid":S(128),"d":{".validate":"newData.isString()"},"$other":{".validate":false}}}}
+  }};
+  return JSON.stringify(r,null,2);
+}
+function errKo(e){
+  const c=(e&&(e.code||e.message))||String(e);
+  if(/configuration-not-found/.test(c)) return "Authentication이 아직 시작되지 않았어요. 2단계를 먼저 해 주세요.";
+  if(/operation-not-allowed|admin-restricted/.test(c)) return "로그인 방법이 꺼져 있어요. 2단계에서 '익명'과 '이메일/비밀번호'를 모두 사용 설정해 주세요.";
+  if(/invalid-api-key|api-key-not-valid/.test(c)) return "apiKey가 올바르지 않아요. firebaseConfig를 다시 복사해 주세요.";
+  if(/wrong-password|invalid-credential|invalid-login/.test(c)) return "이 이메일로 이미 만든 계정이 있는데 비밀번호가 달라요. 처음 정한 비밀번호를 넣어 주세요.";
+  if(/weak-password/.test(c)) return "비밀번호를 6자 이상으로 정해 주세요.";
+  if(/invalid-email/.test(c)) return "이메일 주소 형식이 올바르지 않아요.";
+  if(/network/.test(c)) return "인터넷 연결을 확인해 주세요.";
+  if(/PERMISSION_DENIED|permission/i.test(c)) return "규칙이 아직 적용되지 않았어요. 6단계 규칙을 붙여 넣고 '게시'를 눌렀는지, 이메일이 같은지 확인해 주세요.";
+  return "오류: "+c;
+}
+$("#go1").onclick=async()=>{
+  const cfg=parseCfg($("#cfgIn").value); const dbu=$("#dbUrl").value.trim(); if(dbu) cfg.databaseURL=dbu.replace(/\/+$/,"");
+  EMAIL=$("#tEmail").value.trim().toLowerCase(); const pw=$("#tPw").value;
+  if(!cfg.apiKey||!cfg.projectId) return msg("#m1","bad","firebaseConfig를 찾지 못했어요. 4단계 코드를 통째로 붙여 넣어 주세요.");
+  if(!cfg.databaseURL) return msg("#m1","bad","databaseURL이 없어요. 3단계 Realtime Database 화면 위쪽의 주소(https://…firebasedatabase.app)를 'Realtime Database 주소' 칸에 넣어 주세요.");
+  if(!/^https:\/\/[^/]+\.(firebaseio\.com|firebasedatabase\.app)$/.test(cfg.databaseURL)) return msg("#m1","bad","Realtime Database 주소 형식이 이상해요: "+cfg.databaseURL);
+  if(!/^[^\s@'"]+@[^\s@'"]+\.[^\s@'"]+$/.test(EMAIL)) return msg("#m1","bad","선생님 이메일을 확인해 주세요.");
+  if(pw.length<6) return msg("#m1","bad","비밀번호는 6자 이상이어야 해요.");
+  msg("#m1","info","연결하는 중…"); $("#go1").disabled=true;
+  try{
+    if(!window.firebase){ for(const m of ["app","auth","database"]) await loadScript(`https://www.gstatic.com/firebasejs/9.23.0/firebase-${m}-compat.js`); }
+    if(app){ try{ await app.delete(); }catch(e){} }
+    app=firebase.initializeApp(cfg,"setup"+Date.now());
+    // 익명 로그인 확인 (학생용)
+    const a2=firebase.initializeApp(cfg,"anon"+Date.now());
+    try{ const c=await a2.auth().signInAnonymously(); try{ await c.user.delete(); }catch(e){} }
+    catch(e){ throw e; } finally{ try{ await a2.delete(); }catch(e){} }
+    // 선생님 계정
+    const auth=app.auth();
+    try{ await auth.createUserWithEmailAndPassword(EMAIL,pw); }
+    catch(e){ if(/email-already-in-use/.test(e.code||"")) await auth.signInWithEmailAndPassword(EMAIL,pw); else throw e; }
+    CFG=cfg;
+    $("#rules").textContent=rulesText(EMAIL); $("#s6").style.opacity=1;
+    msg("#m1","ok","✅ 연결 성공! 익명 로그인 OK, 선생님 계정 OK.\n이제 6단계로 내려가 보안 규칙을 붙여 넣어 주세요.");
+    $("#s6").scrollIntoView({behavior:"smooth"});
+  }catch(e){ console.error(e); msg("#m1","bad",errKo(e)); }
+  finally{ $("#go1").disabled=false; }
+};
+function copy(t,btn){ const done=()=>{ const o=btn.textContent; btn.textContent="✅ 복사했어요"; setTimeout(()=>btn.textContent=o,1600); };
+  if(navigator.clipboard) navigator.clipboard.writeText(t).then(done,()=>fb()); else fb();
+  function fb(){ const ta=document.createElement("textarea"); ta.value=t; document.body.appendChild(ta); ta.select(); try{ document.execCommand("copy"); done(); }catch(e){} ta.remove(); } }
+$("#cpRules").onclick=e=>{ if(CFG) copy($("#rules").textContent,e.target); };
+function cfgJs(){ return "// 우리 반 3D 우주 전시관 설정 파일 (setup.html에서 만든 파일)\nwindow.GALLERY_CONFIG = "+JSON.stringify({firebase:CFG,teacherEmail:EMAIL},null,2)+";\n"; }
+$("#go2").onclick=async()=>{
+  if(!CFG||!app) return msg("#m2","bad","5단계를 먼저 해 주세요.");
+  msg("#m2","info","확인하는 중…");
+  try{
+    const db=app.database(); const v=Date.now();
+    await Promise.race([db.ref("ping").set(v),new Promise((_,r)=>setTimeout(()=>r(new Error("network timeout")),15000))]);
+    const got=(await db.ref("ping").once("value")).val(); if(got!==v) throw new Error("읽기 확인 실패");
+    // 학생(익명)이 관리 영역에 못 쓰는지 확인
+    const a3=firebase.initializeApp(CFG,"chk"+Date.now()); let blocked=false;
+    try{ const c=await a3.auth().signInAnonymously(); try{ await a3.database().ref("exlist/000000").set({cls:"x",title:"x",t:1}); }catch(e){ blocked=/PERMISSION_DENIED|permission/i.test(e.code||e.message||""); } try{ await c.user.delete(); }catch(e){} } finally{ try{ await a3.delete(); }catch(e){} }
+    if(!blocked) return msg("#m2","bad","규칙이 아직 이전 상태예요. 규칙 탭의 내용을 모두 지우고 6단계 규칙을 붙여 넣은 뒤 '게시'를 눌러 주세요.");
+    try{ localStorage.setItem("gal-cfg",JSON.stringify({firebase:CFG,teacherEmail:EMAIL})); }catch(e){}
+    $("#cfgOut").textContent=cfgJs(); $("#s7").style.opacity=1;
+    msg("#m2","ok","✅ 규칙 적용 확인! 선생님만 관리할 수 있고, 학생은 자기 사진만 올릴 수 있어요.\n마지막 7단계로 가세요.");
+    $("#s7").scrollIntoView({behavior:"smooth"});
+  }catch(e){ console.error(e); msg("#m2","bad",errKo(e)); }
+};
+$("#dl").onclick=()=>{ if(!CFG) return; const b=new Blob([cfgJs()],{type:"text/javascript"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download="config.js"; document.body.appendChild(a); a.click(); a.remove(); };
+$("#cpCfg").onclick=e=>{ if(CFG) copy(cfgJs(),e.target); };
+</script>
+</body></html>
