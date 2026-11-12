@@ -289,6 +289,11 @@ const CATS={
   asteroid:{name:"소행성",color:"#a16207"}, comet:{name:"혜성",color:"#0891b2"}, dwarf:{name:"왜소 행성",color:"#db2777"}, etc:{name:"기타",color:"#64748b"}
 };
 const CAT_ORDER=["star","planet","satellite","dwarf","asteroid","comet","etc"];
+/* 천체관측관 희귀도 (천체 이름으로 찾음) */
+const RARITY={"태양": "normal", "수성": "normal", "금성": "normal", "지구": "normal", "달": "normal", "화성": "normal", "포보스": "unique", "데이모스": "unique", "목성": "normal", "이오": "unique", "유로파": "unique", "가니메데": "unique", "칼리스토": "unique", "토성": "normal", "타이탄": "unique", "엔켈라두스": "epic", "천왕성": "normal", "미란다": "epic", "해왕성": "normal", "트리톤": "epic", "명왕성": "unique", "카론": "epic", "세레스": "unique", "베스타": "epic", "아이다": "unique", "베누": "unique", "류구": "epic", "이토카와": "epic", "에로스": "epic", "헤일-밥 혜성": "unique", "핼리 혜성": "unique", "67P 혜성": "epic", "네오와이즈 혜성": "epic"};
+const RAR_INFO={normal:{n:"노말",bg:"#cbd5e1",fg:"#1e293b",frame:"#5a4030",glow:"#fff3cf"},unique:{n:"유니크",bg:"#fbbf24",fg:"#3b2500",frame:"#c58a12",glow:"#ffe08a"},epic:{n:"에픽",bg:"#a855f7",fg:"#ffffff",frame:"#7c3aed",glow:"#d8b4fe"}};
+const rarOf=name=>RARITY[String(name||"").trim()]||null;
+const rarChip=(name,small)=>{ const r=rarOf(name); return r?`<span class="chip" style="background:${RAR_INFO[r].bg};color:${RAR_INFO[r].fg}${small?";font-size:11px;padding:1px 7px":""}">${RAR_INFO[r].n}</span>`:""; };
 const COLORS=["#ffd84d","#ff8a80","#7cc6ff","#8ee58a","#c59bff","#ffb26b"];
 const HATS=[{k:0,e:"👒",n:"밀짚모자"},{k:1,e:"🧢",n:"모자"},{k:2,e:"🧑‍🚀",n:"우주 헬멧"}];
 
@@ -628,7 +633,7 @@ const Gallery={
       <div class="list-filter" id="lf"><button data-c="all" class="on">전체</button>${cats.map(c=>`<button data-c="${c}">${CATS[c].name}</button>`).join("")}<button data-c="mine">내 작품</button></div>
       <div class="grid" id="lg"></div>`,{wide:true});
     const draw=()=>{ const ls=all.filter(w=>f==="all"||(f==="mine"?w.uid===DB.uid:w.cat===f));
-      $("#lg").innerHTML=ls.length?ls.map(w=>`<button class="gw ${w.hidden?"hid":""}" data-id="${esc(w.id)}"><img src="${esc(w.th)}" alt=""><div class="n">${esc(w.name)}</div><div class="s"><span class="chip" style="background:${(CATS[w.cat]||CATS.etc).color};font-size:11px;padding:1px 7px">${(CATS[w.cat]||CATS.etc).name}</span> ${esc(w.nick||"")} · 👏${this.clapCount(w.id)}</div></button>`).join(""):`<p class="sub">아직 작품이 없어요.</p>`;
+      $("#lg").innerHTML=ls.length?ls.map(w=>`<button class="gw ${w.hidden?"hid":""}" data-id="${esc(w.id)}"><img src="${esc(w.th)}" alt=""><div class="n">${esc(w.name)} ${rarChip(w.name,true)}</div><div class="s"><span class="chip" style="background:${(CATS[w.cat]||CATS.etc).color};font-size:11px;padding:1px 7px">${(CATS[w.cat]||CATS.etc).name}</span> ${esc(w.nick||"")} · 👏${this.clapCount(w.id)}</div></button>`).join(""):`<p class="sub">아직 작품이 없어요.</p>`;
       $$("#lg .gw").forEach(x=>x.onclick=()=>{ const id=x.dataset.id; closeModal(); World.goToWork(id); }); };
     $$("#lf button").forEach(x=>x.onclick=()=>{ f=x.dataset.c; $$("#lf button").forEach(y=>y.classList.toggle("on",y===x)); draw(); });
     draw();
@@ -639,7 +644,7 @@ const Gallery={
     openModal(`<div class="det">
       <div class="ph" id="dph"><img id="dimg" src="${esc(w.th)}" alt="${esc(w.name)}"></div>
       <div>
-        <span class="chip" style="background:${cat.color}">${cat.name}</span>
+        ${rarChip(w.name)} <span class="chip" style="background:${cat.color}">${cat.name}</span>
         <h2>${esc(w.name)}</h2>
         <div class="desc">${esc(w.desc||"")}</div>
         <div class="meta">🙋 전시한 사람: <b>${esc(w.nick||"")}</b>${w.src?`<br>📷 사진 출처: ${esc(w.src)}`:""}</div>
@@ -770,7 +775,7 @@ const Upload={
     let st=null; try{ st=O.state(); }catch(e){}
     const got=(st&&st.got||[]).map(id=>O.objs.find(o=>o.id===id)).filter(Boolean);
     if(!got.length){ el.innerHTML='<p class="small" style="background:#f1f5ff;padding:10px;border-radius:10px">🔭 아직 관측관에서 찍은 사진이 없어요. 아래에서 다른 사진을 골라도 돼요.</p>'; return; }
-    el.innerHTML=`<div style="font-weight:800;margin-top:6px">🔭 내 관측 도감 (${got.length}장) — 하나를 눌러 고르세요</div><div class="albumpick">${got.map(o=>`<button data-id="${esc(o.id)}"><img src="${esc(o.srcs[0])}" alt="" referrerpolicy="no-referrer">${esc(o.name)}</button>`).join("")}</div>`;
+    el.innerHTML=`<div style="font-weight:800;margin-top:6px">🔭 내 관측 도감 (${got.length}장) — 하나를 눌러 고르세요</div><div class="albumpick">${got.map(o=>`<button data-id="${esc(o.id)}"><img src="${esc(o.srcs[0])}" alt="" referrerpolicy="no-referrer">${esc(o.name)}<br>${o.rar?`<span style="font-size:10px;font-weight:900;color:${RAR_INFO[o.rar].bg}">${RAR_INFO[o.rar].n}</span>`:""}</button>`).join("")}</div>`;
     $$("#apick button[data-id]").forEach(b=>b.onclick=()=>{ $$("#apick button").forEach(x=>x.classList.toggle("on",x===b)); this.fromObj(got.find(o=>o.id===b.dataset.id)); });
     if(hangId){ const b=$(`#apick button[data-id="${hangId}"]`); if(b) b.click(); }
   },
@@ -1149,7 +1154,8 @@ const World=(()=>{
     return canvasTex(512,160,(x,W,H)=>{ x.fillStyle="#ffffff"; rrect(x,4,4,W-8,H-8,14); x.fill(); x.fillStyle=cat.color; rrect(x,20,18,120,40,20); x.fill();
       x.fillStyle="#fff"; x.font=`800 24px ${FONT}`; x.textAlign="center"; x.textBaseline="middle"; x.fillText(cat.name,80,39);
       x.textAlign="left"; x.fillStyle="#2b2f3a"; fitText(x,w.name,330,40,900); x.fillText(w.name,156,40);
-      x.fillStyle="#6b7280"; const sub=`${w.nick||""}${w.hidden?" · (숨김)":""}`; fitText(x,sub,470,28,700); x.fillText(sub,22,112); });
+      const rr=rarOf(w.name); if(rr){ const ri=RAR_INFO[rr]; x.fillStyle=ri.bg; rrect(x,W-150,92,130,44,22); x.fill(); x.fillStyle=ri.fg; x.textAlign="center"; x.font=`900 24px ${FONT}`; x.fillText((rr==="epic"?"💜 ":rr==="unique"?"💛 ":"")+ri.n,W-85,115); x.textAlign="left"; }
+      x.fillStyle="#6b7280"; const sub=`${w.nick||""}${w.hidden?" · (숨김)":""}`; fitText(x,sub,rarOf(w.name)?320:470,28,700); x.fillText(sub,22,112); });
   }
   function photoTex(w){
     if(texCache[w.id]&&texCache[w.id].src===w.th) return texCache[w.id].tex;
@@ -1181,14 +1187,15 @@ const World=(()=>{
   function addFrame(w,s,sc){
     const asp=(w.w&&w.h)?w.w/w.h:1; let fw=(asp>=1.25?1.5:1.2*asp)*sc, fh=fw/asp; if(fh>1.2*sc){ fh=1.2*sc; fw=fh*asp; }
     const g=new THREE.Group(); g.position.set(s.x,FL[s.lv]+1.85,s.z); g.rotation.y=s.ry;
-    const fr=new THREE.Mesh(new THREE.BoxGeometry(fw+0.2,fh+0.2,0.07),M("#5a4030")); fr.position.z=0.035; g.add(fr);
+    const ri=RAR_INFO[rarOf(w.name)]||RAR_INFO.normal;
+    const fr=new THREE.Mesh(new THREE.BoxGeometry(fw+0.2,fh+0.2,0.07),M(ri.frame)); fr.position.z=0.035; g.add(fr);
     const mat=new THREE.Mesh(new THREE.PlaneGeometry(fw+0.08,fh+0.08),M("#ffffff")); mat.position.z=0.072; g.add(mat);
     const pm=new THREE.MeshBasicMaterial({map:photoTex(w),color:w.hidden?0x777777:0xffffff});
     const pic=new THREE.Mesh(new THREE.PlaneGeometry(fw,fh),pm); pic.position.z=0.075; pic.userData={wid:w.id,ownMat:true}; g.add(pic);
     fr.userData.wid=w.id;
     const lb=new THREE.Mesh(new THREE.PlaneGeometry(1.4*sc,0.44*sc),new THREE.MeshBasicMaterial({map:labelTex(w),transparent:true})); lb.userData={ownMat:true,ownMap:true,wid:w.id}; lb.position.set(0,-fh/2-0.4*sc,0.03); g.add(lb);
     const lamp=new THREE.Mesh(new THREE.BoxGeometry(0.5*sc,0.06,0.18),M("#3a3a40")); lamp.position.set(0,fh/2+0.32,0.14); g.add(lamp);
-    const glow=new THREE.Mesh(new THREE.PlaneGeometry(fw+0.5,fh+0.6),new THREE.MeshBasicMaterial({color:s.lv===-1?"#4a5aa8":"#fff3cf",transparent:true,opacity:0.35,depthWrite:false})); glow.userData.ownMat=true; glow.position.z=0.01; g.add(glow);
+    const glow=new THREE.Mesh(new THREE.PlaneGeometry(fw+0.5,fh+0.6),new THREE.MeshBasicMaterial({color:ri!==RAR_INFO.normal?ri.glow:(s.lv===-1?"#4a5aa8":"#fff3cf"),transparent:true,opacity:ri===RAR_INFO.epic?0.6:0.35,depthWrite:false})); glow.userData.ownMat=true; glow.position.z=0.01; g.add(glow);
     FG[s.lv].add(g); pickables.push(pic,fr,lb);
     frameById[w.id]={x:s.x,z:s.z,lv:s.lv,nx:Math.sin(s.ry),nz:Math.cos(s.ry),g};
   }

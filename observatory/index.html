@@ -78,6 +78,17 @@ section.show{display:block}
 .obj.disk,.obj.rock,.obj.jup{box-shadow:0 0 10px 2px rgba(255,255,255,.25)}
 .obj.rock{border-radius:45% 55% 40% 60%}
 .obj.new{animation:glint 2.4s ease-in-out infinite}
+.obj.epic{opacity:.55}
+.obj.epic.new{animation:faint 3.6s ease-in-out infinite}
+@keyframes faint{0%,100%{opacity:.35;filter:none}50%{opacity:.85;filter:drop-shadow(0 0 5px rgba(200,150,255,.9))}}
+.rar{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:900;letter-spacing:.5px;vertical-align:middle}
+.rar.normal{background:#cbd5e1;color:#1e293b}.rar.unique{background:#fbbf24;color:#3b2500}.rar.epic{background:linear-gradient(90deg,#a855f7,#ec4899);color:#fff;box-shadow:0 0 10px rgba(192,132,252,.7)}
+.acard.r-unique{border-color:#fbbf24}.acard.r-epic{border-color:#c084fc;box-shadow:0 0 14px rgba(192,132,252,.55)}
+.acard .cap .rar{margin-left:6px;font-size:11px;padding:1px 7px}
+.rarsum{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px}
+.rarsum div{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 14px;font-weight:900}
+.epicfx{position:relative;overflow:hidden;border-radius:14px;padding:10px 14px;margin-bottom:8px;background:linear-gradient(90deg,rgba(168,85,247,.35),rgba(236,72,153,.35));font-weight:900;font-size:18px;animation:epicglow 1.2s ease-in-out 3}
+@keyframes epicglow{50%{box-shadow:0 0 24px rgba(192,132,252,.9)}}
 @keyframes glint{0%,100%{filter:brightness(1)}50%{filter:brightness(1.5) drop-shadow(0 0 6px rgba(160,200,255,.9))}}
 .obj .ring{position:absolute;left:50%;top:50%;width:260%;height:70%;border:2px solid rgba(240,220,170,.8);border-radius:50%;transform:translate(-50%,-50%) rotate(-18deg)}
 .obj .tail{position:absolute;left:50%;top:50%;height:4px;width:110px;transform-origin:0 50%;border-radius:4px;background:linear-gradient(90deg,rgba(220,245,255,.9),rgba(127,240,224,0))}
@@ -271,7 +282,7 @@ footer{max-width:1280px;margin:0 auto;padding:0 20px 24px;font-size:12px;color:#
     <div class="skywrap">
       <div class="sky" id="skyBox">
         <canvas id="stars"></canvas>
-        <div class="skyhint">큰 행성 옆의 작은 점들도 놓치지 마세요 ✨</div>
+        <div class="skyhint">✨ 아주 작고 희미하게 깜빡이는 점은 <b style="color:#e9b8ff">에픽</b> 천체일지도!</div>
         <div class="reticle" id="reticle" style="left:50%;top:50%"></div>
       </div>
       <div class="side">
@@ -1096,9 +1107,16 @@ try{
   // 전시관 저장소의 observatory/ 폴더에 있으면, 링크 없이 들어와도 전시관(한 단계 위)으로 연결
   if(!GALLERY && /\/observatory\/(index\.html)?$/.test(location.pathname)) GALLERY = new URL("../", location.href).href;
 }catch(e){}
+/* 희귀도: 노말(교과서·쉽게 보임) < 유니크(교과서에 나오지만 찾기 어려움) < 에픽(교과서 밖 · 아주 찾기 어려움) */
+const RAR={normal:{n:"노말",k:"normal"},unique:{n:"유니크",k:"unique"},epic:{n:"에픽",k:"epic"}};
+const RAR_OF={sun:"normal",mercury:"normal",venus:"normal",earth:"normal",mars:"normal",jupiter:"normal",saturn:"normal",uranus:"normal",neptune:"normal",moon:"normal",
+  phobos:"unique",deimos:"unique",io:"unique",europa:"unique",ganymede:"unique",callisto:"unique",titan:"unique",pluto:"unique",ceres:"unique",halley:"unique",halebopp:"unique",bennu:"unique",ida:"unique",
+  enceladus:"epic",miranda:"epic",triton:"epic",charon:"epic",vesta:"epic",ryugu:"epic",itokawa:"epic",eros:"epic",comet67p:"epic",neowise:"epic"};
+OBJS.forEach(o=>{ o.rar=RAR_OF[o.id]||"unique"; });
+const rarTag=o=>`<span class="rar ${o.rar}">${RAR[o.rar].n}</span>`;
 let EMBED=null; try{ if(window.parent!==window && window.parent.SpaceApp) EMBED=window.parent.SpaceApp; }catch(e){ EMBED=null; }
 if(EMBED) GALLERY="embed";
-window.OBS={objs:OBJS,state:()=>S};
+window.OBS={objs:OBJS,state:()=>S,rar:RAR};
 function notifyParent(){ try{ if(EMBED) EMBED.obsProgress({placed:S.placed.length,total:PARTS.length,got:S.got.slice()}); }catch(e){} }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} notifyParent(); }
 /* 밤하늘: 아래쪽 땅과 U자 지평선 (x,y는 % 단위) */
@@ -1277,8 +1295,8 @@ function renderObjects(){
   const box=$("#skyBox"); box.querySelectorAll(".obj,.tag").forEach(n=>n.remove());
   const k=Math.max(0.75, scale());
   OBJS.forEach(o=>{
-    const s=o.sky, d=document.createElement("div"); const r=Math.max(4.5, s.r*k);
-    d.className="obj "+s.t+(S.got.includes(o.id)?" got":" new"); d.style.animationDelay=(Math.random()*2.4).toFixed(2)+"s"; d.style.left=s.x+"%"; d.style.top=s.y+"%";
+    const s=o.sky, d=document.createElement("div"); const rk=o.rar==="epic"?0.6:o.rar==="unique"?0.85:1; const r=Math.max(o.rar==="epic"?3.2:4.5, s.r*k*rk);
+    d.className="obj "+s.t+(S.got.includes(o.id)?" got":" new")+(o.rar==="epic"?" epic":""); d.style.animationDelay=(Math.random()*2.4).toFixed(2)+"s"; d.style.left=s.x+"%"; d.style.top=s.y+"%";
     d.style.width=d.style.height=(r*2)+"px";
     if(s.t==="sun"){ d.style.background="radial-gradient(circle,#fff7d6 0%,#ffd45c 45%,#ff9a2e 75%,rgba(255,120,40,0) 100%)"; d.style.boxShadow="0 0 40px 18px rgba(255,170,60,.45)"; }
     else if(s.t==="jup") d.style.background="repeating-linear-gradient(0deg,#e8d2ad 0 3px,#c49a6c 3px 5px)";
@@ -1290,8 +1308,9 @@ function renderObjects(){
   });
   renderStats();
 }
+function rarRows(){ return ["normal","unique","epic"].map(r=>{ const all=OBJS.filter(o=>o.rar===r), got=all.filter(o=>S.got.includes(o.id)); return `<div class="catrow ${got.length===all.length?'full':''}" style="margin-bottom:8px"><span class="rar ${r}">${RAR[r].n}</span><span class="nm"></span><span class="ct">${got.length} / ${all.length}</span></div>`; }).join(""); }
 function renderStats(){
-  $("#catStats").innerHTML = CAT_ORDER.map(c=>{
+  $("#catStats").innerHTML = rarRows() + '<div style="height:6px"></div>' + CAT_ORDER.map(c=>{
     const all=OBJS.filter(o=>o.cat===c), got=all.filter(o=>S.got.includes(o.id));
     return `<div class="catrow ${got.length===all.length?'full':''}" style="margin-bottom:8px"><span class="dot" style="background:${CATS[c].color}"></span><span class="nm">${CATS[c].name}</span><span class="ct">${got.length} / ${all.length}</span></div>`;
   }).join("");
@@ -1353,7 +1372,7 @@ function showQuiz(o){
     <div class="eyewrap">
       <div class="eyepiece"><img id="qimg" alt="${o.name}" style="filter:none"><div class="cross"></div></div>
       <div class="ctrl">
-        <h2 class="title">📸 찰칵! <span style="color:var(--amber)">${o.name}</span></h2>
+        <h2 class="title">📸 찰칵! <span style="color:var(--amber)">${o.name}</span> ${rarTag(o)}</h2>
         <div class="clue">🔎 단서: ${o.clue}</div>
         <p style="margin:0">이 천체는 무엇일까요?</p>
         <div class="quiz">${CAT_ORDER.map(c=>`<button class="qbtn" data-c="${c}">${CATS[c].name}</button>`).join("")}</div>
@@ -1383,8 +1402,10 @@ function showDetail(o, isNew){
     <div class="detail">
       <div class="bigph"><img id="dimg" alt="${o.name}"></div>
       <div>
+        ${isNew&&o.rar==="epic"?'<div class="epicfx">💜 에픽 천체 발견! 교과서에도 없는 희귀한 천체예요!</div>':''}
+        ${isNew&&o.rar==="unique"?'<div class="epicfx" style="background:linear-gradient(90deg,rgba(251,191,36,.35),rgba(245,158,11,.25))">💛 유니크 천체 발견!</div>':''}
         ${isNew?'<div style="color:var(--ok);font-weight:900">✔ 정답! 도감에 저장했어요.</div>':''}
-        <span class="chip" style="background:${CATS[o.cat].color}">${catLabel(o)}</span>
+        ${rarTag(o)} <span class="chip" style="background:${CATS[o.cat].color}">${catLabel(o)}</span>
         <h2 class="title">${o.name}</h2>
         <div class="desc">${o.desc}</div>
         <div class="credit">📷 ${BY[o.by]}<br>촬영: ${o.credit}<br>출처: Wikimedia Commons</div>
@@ -1456,13 +1477,14 @@ function showComplete(){
 
 /* ---------- STEP 3 album ---------- */
 function renderAlbum(){
-  $("#albumBody").innerHTML = CAT_ORDER.map(c=>{
+  const sum='<div class="rarsum">'+["normal","unique","epic"].map(r=>{ const all=OBJS.filter(o=>o.rar===r); return `<div>${rarTag({rar:r})} ${all.filter(o=>S.got.includes(o.id)).length} / ${all.length}</div>`; }).join("")+'</div>';
+  $("#albumBody").innerHTML = sum + CAT_ORDER.map(c=>{
     const list=OBJS.filter(o=>o.cat===c);
     const got=list.filter(o=>S.got.includes(o.id)).length;
     return `<div class="catsec"><h3><span class="dot" style="background:${CATS[c].color}"></span>${CATS[c].name} <span style="color:var(--mute);font-size:15px">${got} / ${list.length}</span></h3>
       <div class="grid">${list.map(o=>S.got.includes(o.id)
-        ? `<button class="acard" data-id="${o.id}"><div class="ph"><img data-id="${o.id}" alt="${o.name}"></div><div class="cap">${o.name}</div></button>`
-        : `<div class="acard locked"><div class="ph">?</div><div class="cap">???</div></div>`).join("")}</div></div>`;
+        ? `<button class="acard r-${o.rar}" data-id="${o.id}"><div class="ph"><img data-id="${o.id}" alt="${o.name}"></div><div class="cap">${o.name}${rarTag(o)}</div></button>`
+        : `<div class="acard locked r-${o.rar}"><div class="ph">?</div><div class="cap">???${rarTag(o)}</div></div>`).join("")}</div></div>`;
   }).join("") + (S.got.length===0?'<p class="lead">아직 찍은 사진이 없어요. 망원경을 조립하고 밤하늘을 관측해 보세요!</p>':"");
   document.querySelectorAll("#albumBody img[data-id]").forEach(img=>setImg(img, byId(img.dataset.id)));
   document.querySelectorAll("#albumBody .acard[data-id]").forEach(b=>b.onclick=()=>showDetail(byId(b.dataset.id), false));
