@@ -505,7 +505,10 @@ const Join={
     }catch(e){ $("#jErr").textContent=errText(e); }
     finally{ this.busy=false; $("#jCodeGo").disabled=false; $("#jCodeGo").textContent="확인"; }
   },
-  enter(){
+  async enter(){
+    $("#jErr").textContent="";
+    try{ const m=await withTimeout(DB.get(`ex/${ST.code}/meta`),12000,"TIMEOUT"); if(!m){ $("#jErr").textContent="전시회가 없어졌어요. 선생님께 코드를 확인해 주세요."; return; } ST.meta=m;
+      if(m.open===false&&!isTeacher()){ $("#jErr").textContent="지금은 전시관이 닫혀 있어요."; return; } }catch(e){ $("#jErr").textContent=errText(e); return; }
     const num=$("#jNum").value.replace(/\D/g,"").slice(0,2); const name=$("#jName").value.trim().replace(/\s+/g," ").slice(0,6);
     const teacher=isTeacher();
     if(!teacher && !num){ $("#jErr").textContent="번호를 입력해 주세요."; $("#jNum").focus(); return; }
@@ -573,7 +576,8 @@ const Gallery={
       .sort((a,b)=>(CAT_ORDER.indexOf(a.cat)-CAT_ORDER.indexOf(b.cat))||String(a.name).localeCompare(String(b.name),"ko")||(a.t-b.t));
   },
   rt:0,
-  refreshWorks(){ clearTimeout(this.rt); this.rt=setTimeout(()=>World.setWorks(this.visible()),350); },
+  refreshWorks(){ clearTimeout(this.rt); this.rt=setTimeout(()=>World.setWorks(this.layoutList()),350); },
+  layoutList(){ const t=isTeacher(); return Object.entries(this.works).map(([k,w])=>({...w,id:k,hidden:!!this.hidden[k],skip:!t&&!!this.hidden[k]})); },
   kick(msg){ this.leave(true); toast(msg,4000); },
   leave(silent){
     try{ DB.cancelDisc(`ex/${ST.code}/live/${DB.uid}`); DB.remove(`ex/${ST.code}/live/${DB.uid}`).catch(()=>{}); }catch(e){}
@@ -699,9 +703,9 @@ const Upload={
       <p class="small" style="margin:0 0 6px">관측관에서 찍은 사진을 고르면 사진과 설명이 자동으로 채워져요. 설명에 <b>내가 알게 된 점</b>을 덧붙여 보세요.</p>
       <div id="apick"></div>
       <div class="up">
-        <label class="pick" id="pick"><input type="file" accept="image/*" id="ufile"><div id="pv">📷 여기를 눌러 사진 고르기<br><span class="small">(다운로드 폴더의 천체 사진)</span></div></label>
+        <label class="pick" id="pick"><input type="file" accept="image/*" id="ufile"><div id="pv">📷 위의 관측 도감에서 고르거나<br>여기를 눌러 사진 파일 고르기</div></label>
         <div>
-          <textarea class="inp paste" id="upaste" placeholder="📋 천체관측관에서 복사한 설명을 여기에 길게 눌러 '붙여넣기' 하세요"></textarea>
+          <textarea class="inp paste" rows="2" id="upaste" placeholder="📋 (선택) 복사해 둔 설명이 있으면 여기에 붙여 넣어요. 자동으로 채워져요."></textarea>
           <label class="f">천체 이름 *</label><input id="uname" class="inp" maxlength="30" placeholder="예) 목성">
           <label class="f">분류 *</label><select id="ucat" class="inp">${CAT_ORDER.map(k=>`<option value="${k}">${CATS[k].name}</option>`).join("")}</select>
           <label class="f">설명 (내가 알게 된 점)</label><textarea id="udesc" class="inp" maxlength="300" placeholder="이 천체의 특징을 써요"></textarea>
@@ -777,7 +781,7 @@ const Upload={
     if(this.busy) return;
     const name=$("#uname").value.trim(), cat=$("#ucat").value, desc=$("#udesc").value.trim(), src=$("#usrc").value.trim();
     const E=$("#uerr"); E.textContent="";
-    if(!this.img){ E.textContent="먼저 왼쪽에서 사진을 골라 주세요."; return; }
+    if(!this.img){ E.textContent="먼저 사진을 골라 주세요. (관측 도감 또는 사진 칸)"; return; }
     if(!name){ E.textContent="천체 이름을 써 주세요."; $("#uname").focus(); return; }
     if(Gallery.myWorks().length>=10&&!isTeacher()){ E.textContent="한 사람이 10개까지 올릴 수 있어요. 예전 작품을 지우고 올려 주세요."; return; }
     this.busy=true; const go=$("#ugo"); go.disabled=true; go.textContent="올리는 중…";
@@ -792,7 +796,8 @@ const Upload={
       bar.style.width="100%";
       try{ localStorage.setItem(`gal-hung-${ST.code}`,"1"); }catch(e){}
       closeModal(); toast(`'${name}' 작품을 전시관에 걸었어요! 🎉`,3500); World.emote("👏");
-      setTimeout(()=>World.goToWork(wid),900);
+      setTimeout(()=>{ const f=World._frame(wid); const fl=f?(f.lv===-1?"지하 1층":f.lv===1?"2층":"1층"):"전시관";
+        toast(`🔍 내 작품이 ${fl} 어딘가에 걸렸어요! 직접 찾아보세요.`,4500); },1500);
     }catch(e){
       console.error(e); E.textContent=errText(e);
       if(imgDone&&wid) DB.remove(`img/${c}/${wid}`).catch(()=>{});
@@ -1139,20 +1144,23 @@ const World=(()=>{
   }
   let works=[];
   function clearFrames(){ [-1,0,1].forEach(lv=>{ const g=FG[lv]; while(g.children.length){ const c=g.children.pop(); c.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.userData.ownMat){ if(o.material.map&&o.userData.ownMap) o.material.map.dispose(); o.material.dispose(); } }); } }); pickables=pickables.filter(p=>p.userData.booth); frameById={}; }
+  function hashId(id){ let h=2166136261; for(const c of String(id)){ h^=c.charCodeAt(0); h=Math.imul(h,16777619)>>>0; } return h; }
   function placeFrames(){
     clearFrames();
+    // 전시실 전체에 '무작위지만 고정된' 자리: 작품 id로 자리를 정해서, 모든 기기에서 같은 위치이고 새 작품이 와도 기존 위치가 바뀌지 않음
     const N=works.length; let sp=2.4, sc=1;
-    let rooms=roomSlots(sp); let cap=rooms.reduce((a,r)=>a+r.s.length,0);
-    if(cap<N){ sp=1.75; sc=0.72; rooms=roomSlots(sp); cap=rooms.reduce((a,r)=>a+r.s.length,0); }
-    // 사용할 전시실 수: 9점마다 한 방씩 (최소 1, 최대 전체)
-    let K=Math.max(1,Math.min(rooms.length,Math.ceil(N/9)));
-    while(K<rooms.length&&rooms.slice(0,K).reduce((a,r)=>a+r.s.length,0)<N) K++;
-    const use=rooms.slice(0,K); const per=[]; let left=N;
-    use.forEach((r,i)=>{ const want=Math.ceil(left/(K-i)); per.push(Math.min(r.s.length,want)); left-=per[i]; });
-    for(let i=0;i<use.length&&left>0;i++){ const add=Math.min(left,use[i].s.length-per[i]); per[i]+=add; left-=add; }
-    const roomCats={}; let wi=0;
-    use.forEach((r,ri)=>{ const n=per[ri]; for(let k=0;k<n&&wi<N;k++,wi++){ const s=r.s[Math.floor((k+0.5)*r.s.length/n)]; addFrame(works[wi],s,sc); const key=r.lv+r.room; (roomCats[key]=roomCats[key]||new Set()).add((CATS[works[wi].cat]||CATS.etc).name); } });
-    roomSigns.forEach(o=>{ const F=o.lv===1?"2층":"1층"; const cs=roomCats[o.lv+o.room]; setSignText(o.m,`${F} 전시실 ${o.room}`+(cs?" · "+[...cs].slice(0,2).join("·"):"")); });
+    let rooms=roomSlots(sp); let all=[].concat(...rooms.map(r=>r.s.map(x=>({...x,room:r.room}))));
+    if(all.length<N){ sp=1.75; sc=0.72; rooms=roomSlots(sp); all=[].concat(...rooms.map(r=>r.s.map(x=>({...x,room:r.room})))); }
+    const cap=all.length, used=new Array(cap).fill(false), roomCount={};
+    const order=works.slice().sort((a,b)=>(a.t||0)-(b.t||0)||String(a.id).localeCompare(String(b.id)));
+    for(const w of order){
+      const h=hashId(w.id); let idx=-1;
+      for(let k=0;k<cap;k++){ const i=(h+k*k)%cap; if(!used[i]){ idx=i; break; } }
+      if(idx<0) idx=used.indexOf(false); if(idx<0) break;
+      used[idx]=true; const s=all[idx];
+      if(!w.skip){ addFrame(w,s,sc); const key=s.lv+s.room; roomCount[key]=(roomCount[key]||0)+1; }
+    }
+    roomSigns.forEach(o=>{ const F=o.lv===1?"2층":"1층"; const n=roomCount[o.lv+o.room]; setSignText(o.m,`${F} 전시실 ${o.room}`+(n?` · ${n}점`:"")); });
     const ids=new Set(works.map(w=>w.id)); Object.keys(texCache).forEach(k=>{ if(!ids.has(k)){ texCache[k].tex.dispose(); delete texCache[k]; } });
   }
   function addFrame(w,s,sc){
