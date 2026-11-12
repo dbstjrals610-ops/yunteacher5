@@ -178,6 +178,22 @@ footer{max-width:1280px;margin:0 auto;padding:0 20px 24px;font-size:12px;color:#
   .build,.skywrap{grid-template-columns:1fr}
   .eyewrap,.detail{grid-template-columns:1fr;justify-items:center}
   .steps{margin-left:0}
+  /* 작은 화면: 망원경 그림을 위에 붙여 두고 부품 상자만 스크롤 → 끌어다 놓을 자리가 항상 보임 */
+  .build .stage{position:sticky;top:var(--hh,0px);z-index:6;min-height:0;height:min(40vh,360px);box-shadow:0 10px 24px rgba(0,0,0,.55)}
+  .build .stage svg{height:100%;max-height:none}
+}
+@media (max-width:640px){
+  header{padding:8px 12px;gap:8px}
+  header h1{font-size:18px}
+  header h1 .logo{width:26px;height:26px}
+  body.embed header h1{display:none}
+  .counter{font-size:13px}
+  .steps{width:100%;gap:4px}
+  .step{flex:1;justify-content:center;padding:7px 6px;font-size:13px;white-space:nowrap;gap:4px}
+  .step .n{width:18px;height:18px;font-size:11px}
+  main{padding-top:10px}
+  .lead{font-size:14px}
+  .pcard{min-height:60px;padding:8px}
 }
 </style>
 </head>
@@ -1134,6 +1150,9 @@ const RAR_OF={sun:"normal",mercury:"normal",venus:"normal",earth:"normal",mars:"
 OBJS.forEach(o=>{ o.rar=RAR_OF[o.id]||"unique"; });
 const rarTag=o=>`<span class="rar ${o.rar}">${RAR[o.rar].n}</span>`;
 let EMBED=null; try{ if(window.parent!==window && window.parent.SpaceApp) EMBED=window.parent.SpaceApp; }catch(e){ EMBED=null; }
+if(EMBED) document.body.classList.add("embed");
+function setHH(){ const h=document.querySelector("header"); if(h) document.documentElement.style.setProperty("--hh",h.offsetHeight+"px"); }
+setHH(); window.addEventListener("resize",setHH);
 if(EMBED) GALLERY="embed";
 window.OBS={objs:OBJS,state:()=>S,rar:RAR};
 function notifyParent(){ try{ if(EMBED) EMBED.obsProgress({placed:S.placed.length,total:PARTS.length,got:S.got.slice()}); }catch(e){} }
@@ -1279,8 +1298,11 @@ function bindCard(card){
         moved=true; ghost=document.createElement("div"); ghost.className="drag-ghost"; ghost.innerHTML=iconSVG(id); document.body.appendChild(ghost);
         selectCard(id);
       }
-      if(ghost){ ghost.style.left=ev.clientX+"px"; ghost.style.top=ev.clientY+"px"; }
+      if(ghost){ ghost.style.left=ev.clientX+"px"; ghost.style.top=ev.clientY+"px"; lastY=ev.clientY; if(!scrollT) scrollT=requestAnimationFrame(autoScroll); }
     };
+    let lastY=0, scrollT=0;
+    const autoScroll=()=>{ scrollT=0; if(!ghost) return; const hh=(document.querySelector("header")||{offsetHeight:0}).offsetHeight;
+      if(lastY<hh+60) window.scrollBy(0,-14); else if(lastY>window.innerHeight-60) window.scrollBy(0,14); else return; scrollT=requestAnimationFrame(autoScroll); };
     const up=ev=>{
       card.removeEventListener("pointermove",move); card.removeEventListener("pointerup",up); card.removeEventListener("pointercancel",up);
       if(ghost){ ghost.remove(); tryPlace(id, ev.clientX, ev.clientY); }

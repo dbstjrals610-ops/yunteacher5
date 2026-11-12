@@ -87,6 +87,12 @@ a{color:#2f6fde}
 .albumpick button{border:3px solid transparent;border-radius:12px;background:#0d1230;padding:4px;color:#fff;font-size:12px;font-weight:700}
 .albumpick button.on{border-color:var(--green)}
 .albumpick img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px;display:block;background:#1c2550}
+#photoOv{position:absolute;inset:0;display:none;align-items:flex-start;justify-content:center;pointer-events:none;z-index:4}
+#photoOv .pzbox{margin-top:calc(70px + env(safe-area-inset-top));background:rgba(20,24,40,.82);color:#fff;border-radius:22px;padding:14px 26px;text-align:center;pointer-events:auto}
+#pzNum{font-size:64px;font-weight:900;line-height:1.1}
+#pzMsg{font-size:17px;font-weight:800;margin:4px 0 8px}
+#photoOv.flash{background:#fff;transition:background .1s}
+.photoRes img{width:100%;border-radius:12px;display:block;box-shadow:0 6px 20px rgba(0,0,0,.2)}
 #cross{position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px;border-radius:50%;border:2px solid rgba(255,255,255,.9);box-shadow:0 0 0 1px rgba(0,0,0,.3);display:none;pointer-events:none}
 
 /* modal */
@@ -197,6 +203,18 @@ table.wt img{width:52px;height:52px;object-fit:cover;border-radius:8px;display:b
 .hfoot a{margin-left:auto}
 .backlink{display:inline-block;margin-bottom:10px;font-size:14px;font-weight:700;color:var(--mute);text-decoration:none}
 @media (max-width:760px){ .homegrid{grid-template-columns:1fr} .home .hero h1{font-size:28px} }
+@media (max-width:520px){
+  #joy{left:calc(14px + env(safe-area-inset-left));bottom:calc(84px + env(safe-area-inset-bottom));width:112px;height:112px}
+  #knob{width:50px;height:50px;margin:-25px 0 0 -25px}
+  .bottombar{padding:6px 8px;gap:5px;bottom:calc(10px + env(safe-area-inset-bottom))}
+  .bottombar button{width:44px;height:44px;font-size:20px}
+  .bottombar .sep{margin:0 1px}
+  .bottombar .view{padding:0 12px;font-size:14px}
+  #hint{bottom:calc(210px + env(safe-area-inset-bottom));font-size:13px}
+  #act{bottom:calc(210px + env(safe-area-inset-bottom));font-size:17px;padding:12px 20px}
+  .tbtns{gap:5px}
+  .tb{min-height:40px;padding:8px 9px}
+}
 .spin{width:44px;height:44px;border:5px solid #dfe6f3;border-top-color:var(--orange);border-radius:50%;animation:sp 0.9s linear infinite;margin:0 auto 14px}
 @keyframes sp{to{transform:rotate(360deg)}}
 </style>
@@ -287,6 +305,7 @@ table.wt img{width:52px;height:52px;object-fit:cover;border-radius:8px;display:b
         <button class="tb gr" id="bUpload">📷<span class="t">사진 올리기</span></button>
         <button class="tb or" id="bList">🖼️<span class="t">작품 목록</span></button>
         <button class="tb" id="bWall">💬<span class="t">방명록</span></button>
+        <button class="tb" id="bPhoto" style="display:none" title="단체사진">📸<span class="t">단체사진</span></button>
         <button class="tb" id="bFull" title="전체 화면">⛶</button>
         <button class="tb" id="bExit">🔭<span class="t">관측관</span></button>
       </div>
@@ -302,6 +321,7 @@ table.wt img{width:52px;height:52px;object-fit:cover;border-radius:8px;display:b
       <button id="bView" class="view">1인칭</button>
     </div>
     <button id="act" style="display:none"></button>
+    <div id="photoOv"><div class="pzbox"><div id="pzNum">3</div><div id="pzMsg"></div><button class="btn pri" id="pzGo">🏃 포토존 계단으로 이동</button></div></div>
     <div id="hint">왼쪽 아래 동그라미를 밀어서 걷고, 화면을 끌어서 둘러봐요.<br>바닥을 누르면 그쪽으로 걸어가고, 액자를 누르면 크게 볼 수 있어요.</div>
   </div>
 </section>
@@ -608,7 +628,10 @@ const Gallery={
     World.setExhibition(ST.meta);
     World.spawnMe(ST.me); World.setWorks([]); World.setGate(!!this.ticket()||isTeacher());
     const U=ST.unsub;
-    U.push(DB.on(`ex/${c}/meta`,m=>{ if(!m){ this.kick("전시회가 삭제되었어요."); return; } ST.meta=m; $("#exTitle").textContent=`${m.cls||""} ${m.title||""}`.trim(); World.setExhibition(m); this.updateButtons();
+    let firstMeta=true, lastPhoto=null;
+    U.push(DB.on(`ex/${c}/meta`,m=>{ if(!m){ this.kick("전시회가 삭제되었어요."); return; } ST.meta=m;
+      if(firstMeta){ firstMeta=false; lastPhoto=m.photo||null; }
+      else if(m.photo&&m.photo!==lastPhoto){ lastPhoto=m.photo; if(DB.now()-m.photo<9000) World.countdown(m.photo+10000,true); } $("#exTitle").textContent=`${m.cls||""} ${m.title||""}`.trim(); World.setExhibition(m); this.updateButtons();
       if(m.open===false&&!isTeacher()) this.kick("선생님이 전시관을 닫았어요."); }));
     U.push(DB.on(`ex/${c}/hidden`,h=>{ this.hidden=h||{}; this.refreshWorks(); }));
     U.push(DB.on(`ex/${c}/claps`,v=>{ this.claps=v||{}; }));
@@ -625,6 +648,9 @@ const Gallery={
     DB.onDisc(`ex/${c}/live/${DB.uid}`);
     this.updateButtons();
     $("#bUpload").onclick=()=>Upload.open();
+    $("#bPhoto").style.display=isTeacher()?"":"none";
+    $("#bPhoto").onclick=async()=>{ if(!await ask("모두에게 단체사진 카운트다운(10초)을 보낼까요?\n학생 화면에 '포토존으로 이동' 버튼이 떠요.","보내기")) return;
+      try{ await DB.set(`ex/${c}/meta/photo`,DB.TS); toast("📸 10초 뒤 단체사진! 학생들이 포토존으로 모여요."); }catch(e){ toast(errText(e)); } };
     $("#bList").onclick=()=>this.openList();
     $("#bWall").onclick=()=>this.openWall();
     $("#bExit").onclick=async()=>{ if(IS_TEACHER_PAGE){ if(await ask("전시관에서 나갈까요?","나가기")) this.leave(); } else this.leave(); };
@@ -661,6 +687,26 @@ const Gallery={
     if(IS_TEACHER_PAGE) { Teacher.start(); return; }
     if(!silent){ App.toObs(); return; }
     show("join"); $("#stepMe").style.display=""; $("#stepCode").style.display="none";
+  },
+  showPhoto(url,n,group){
+    const d=new Date(), m=ST.meta||{};
+    const cv=document.createElement("canvas"); cv.width=1600; cv.height=1160; const x=cv.getContext("2d");
+    const im=new Image(); im.onload=()=>{
+      x.fillStyle="#fffaf0"; x.fillRect(0,0,1600,1160); x.drawImage(im,0,0,1600,1000);
+      x.fillStyle="#2b2f3a"; x.font='900 46px "Noto Sans KR",sans-serif'; x.textBaseline="middle"; x.fillText(`🪐 ${m.cls||""} ${m.title||""}`.trim(),40,1080);
+      x.textAlign="right"; x.fillStyle="#6b7280"; x.font='700 34px "Noto Sans KR",sans-serif'; x.fillText(`${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} · 함께한 친구 ${n}명`,1560,1080);
+      const out=cv.toDataURL("image/jpeg",0.9);
+      openModal(`<div class="photoRes"><h2 style="margin:0 0 10px">📸 ${group?"우리 반 단체사진":"포토존 사진"}</h2><img src="${out}" alt="단체사진">
+        <p class="small" style="margin:10px 0 0">포토존 계단에 있던 친구 ${n}명이 찍혔어요.${n<2&&group?" 다음에는 계단으로 모여 보세요!":""}</p>
+        <div class="btnrow"><button class="btn grn" id="phSave">💾 내 기기에 저장</button>${isTeacher()?'<button class="btn pri" id="phHang">🖼️ 전시관 벽에 걸기</button>':""}<button class="btn" id="phAgain">🔄 다시 찍기</button></div></div>`,{wide:true});
+      $("#phSave").onclick=()=>{ const a=document.createElement("a"); a.href=out; a.download=`우리반_단체사진_${d.getMonth()+1}월${d.getDate()}일.jpg`; document.body.appendChild(a); a.click(); a.remove(); toast("저장했어요! (다운로드 폴더)"); };
+      $("#phAgain").onclick=()=>{ closeModal(); World.countdown(DB.now()+3200,false); };
+      if($("#phHang")) $("#phHang").onclick=async()=>{ const b=$("#phHang"); b.disabled=true; b.textContent="거는 중…";
+        try{ const img=await loadImg(out); const full=fitSize(img,1280,0.82,420000), th=fitSize(img,512,0.78,110000); const c=ST.code, wid=DB.key(`ex/${c}/works`);
+          await withTimeout(DB.set(`img/${c}/${wid}`,{uid:DB.uid,d:full.d}),40000,"TIMEOUT");
+          await withTimeout(DB.set(`ex/${c}/works/${wid}`,{uid:DB.uid,name:"우리 반 단체사진",cat:"etc",desc:`${d.getMonth()+1}월 ${d.getDate()}일, ${m.cls||"우리 반"} 친구 ${n}명이 포토존에서 함께 찍었어요.`,src:"우리 반 3D 우주 전시관 포토존",nick:"선생님",th:th.d,w:th.w,h:th.h,t:DB.TS}),20000,"TIMEOUT");
+          closeModal(); toast("🖼️ 단체사진을 전시관 벽에 걸었어요!",3500); }catch(e){ toast(errText(e)); b.disabled=false; b.textContent="🖼️ 전시관 벽에 걸기"; } };
+    }; im.src=url;
   },
   ticketKey(){ return `gal-ticket-${ST.code}-${DB.uid}`; },
   ticket(){ try{ return JSON.parse(localStorage.getItem(this.ticketKey())||"null"); }catch(e){ return null; } },
@@ -892,6 +938,9 @@ const World=(()=>{
   const UP={x0:-6.5,x1:-4.5,z0:-7.5,z1:-1.5}, DN={x0:4.5,x1:6.5,z0:-7.5,z1:-1.5}, ATR={x0:-3.2,x1:3.2,z0:-8,z1:-1.5};
   const HC={x:0,z:-4.75,r:1.9};
   const BOOTH={x:7.2,z:5.4};
+  /* 단체사진 포토존: 전시관 앞 왼쪽, 3단 계단 + 문구 벽 */
+  const PZ={x0:-15,x1:-7,cx:-11,wall:6.2,tiers:[{z0:8.5,z1:9.6,y:0.45},{z0:7.5,z1:8.5,y:1.25},{z0:6.5,z1:7.5,y:2.05}],cam:{x:-11,y:3.0,z:17.6},look:{x:-11,y:3.3,z:7.0}};
+  const inPZ=(x,z)=>x>PZ.x0-1&&x<PZ.x1+1&&z>PZ.wall&&z<15.2;
   let R,scene,cam,clock,running=false,inited=false,raf=0;
   let outG,othersG,meAv=null; const G={}; const FG={};
   let C={"-1":[],"0":[],"1":[]}, camBlock=[], pickables=[], floorMeshes=[];
@@ -901,7 +950,7 @@ const World=(()=>{
   const keys={}; let jx=0,jy=0, walkTo=null, inputPaused=false, ride=null;
   const others={};
   let lastSend=0,lastSent=null,lastBeat=0, myEmo={e:"",et:0};
-  let exMeta=null, bannerTex=null, signTex=null, planets=[], solarG=null;
+  let exMeta=null, bannerTex=null, signTex=null, pzTex=null, planets=[], solarG=null;
 
   const MC={}; function M(c,o){ const k=c+(o?JSON.stringify(o):""); if(!MC[k]) MC[k]=new THREE.MeshLambertMaterial(Object.assign({color:c},o||{})); return MC[k]; }
   function flat(g){ const n=g.index?g.toNonIndexed():g; n.computeVertexNormals(); return n; }
@@ -954,6 +1003,7 @@ const World=(()=>{
     if(inR(UP,x,z)&&(lv===0||lv===1)) return stairY(UP,z,true);
     if(inR(DN,x,z)&&(lv===0||lv===-1)) return stairY(DN,z,false);
     if(inside(x,z)) return FL[lv];
+    if(x>PZ.x0&&x<PZ.x1){ for(const t of PZ.tiers) if(z>=t.z0&&z<t.z1) return t.y; }
     if(z<1.8&&z>=0&&Math.abs(x)<6.7) return FL[0];
     if(Math.abs(x)<5){ if(z>=1.8&&z<2.2) return 0.3; if(z>=2.2&&z<2.6) return 0.15; }
     return 0;
@@ -1012,6 +1062,23 @@ const World=(()=>{
     const ft=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.45,0.08,12),M("#8a8f99")); ft.position.y=0.04; bn.add(ft);
     const cloth=new THREE.Mesh(new THREE.PlaneGeometry(1.35,2.7),new THREE.MeshBasicMaterial({map:bannerTex,side:THREE.DoubleSide})); cloth.position.set(0,1.85,0.06); bn.add(cloth);
     bn.position.set(-5.2,0,5.6); bn.rotation.y=0.35; outG.add(bn); C[0].push([-5.7,-4.7,5.2,6.0]);
+    // 단체사진 포토존
+    const pz=new THREE.Group(); outG.add(pz);
+    const tc=["#f6efe3","#efe5d5","#e8dcc8"];
+    PZ.tiers.forEach((t,i)=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(PZ.x1-PZ.x0,t.y,t.z1-t.z0+0.02),M(tc[i])); m.position.set(PZ.cx,t.y/2,(t.z0+t.z1)/2); m.userData.floor=true; m.userData.lv=0; pz.add(m); floorMeshes.push(m);
+      const edge=new THREE.Mesh(new THREE.BoxGeometry(PZ.x1-PZ.x0,0.04,0.06),M("#ffcf66")); edge.position.set(PZ.cx,t.y+0.01,t.z1); pz.add(edge); });
+    const back=new THREE.Mesh(new THREE.BoxGeometry(PZ.x1-PZ.x0+1.0,7.0,0.3),M("#e9e1d3")); back.position.set(PZ.cx,3.5,PZ.wall+0.15); pz.add(back); C[0].push([PZ.x0-0.5,PZ.x1+0.5,PZ.wall,PZ.wall+0.3]);
+    pzTex=canvasTex(1024,384,()=>{});
+    const pw=PZ.x1-PZ.x0+0.6; const pnl=new THREE.Mesh(new THREE.PlaneGeometry(pw,pw*384/1024),new THREE.MeshBasicMaterial({map:pzTex})); pnl.position.set(PZ.cx,5.05,PZ.wall+0.31); pz.add(pnl);
+    for(const x of [PZ.x0-0.65,PZ.x1+0.65]){ const c=new THREE.Mesh(flat(new THREE.CylinderGeometry(0.22,0.26,7.4,10)),M("#fbf8f2")); c.position.set(x,3.7,PZ.wall+0.3); pz.add(c); const st=new THREE.Mesh(new THREE.OctahedronGeometry(0.4,0),new THREE.MeshBasicMaterial({color:"#ffd166"})); st.position.set(x,7.8,PZ.wall+0.3); pz.add(st); C[0].push([x-0.3,x+0.3,PZ.wall,PZ.wall+0.6]); }
+    const camG=new THREE.Group(); camG.position.set(PZ.cam.x,0,PZ.cam.z+0.6);
+    [[-0.3,0.25],[0.3,0.25],[0,-0.35]].forEach(([dx,dz])=>{ const l=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,1.5,6),M("#555a66")); l.position.set(dx/2,0.72,dz/2); l.rotation.x=dz*0.3; l.rotation.z=-dx*0.3; camG.add(l); });
+    const body=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.34,0.3),M("#2b2f3a")); body.position.y=1.55; camG.add(body);
+    const lens=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.22,14),M("#111")); lens.rotation.x=Math.PI/2; lens.position.set(0,1.55,-0.22); camG.add(lens);
+    outG.add(camG); C[0].push([PZ.cam.x-0.35,PZ.cam.x+0.35,PZ.cam.z+0.25,PZ.cam.z+0.95]);
+    const sgx=canvasTex(512,160,(x,w,h)=>{ x.fillStyle="#2b2f3a"; rrect(x,4,4,w-8,h-8,24); x.fill(); x.fillStyle="#ffd166"; x.textAlign="center"; x.textBaseline="middle"; x.font=`900 64px ${FONT}`; x.fillText("📸 포토존",w/2,h/2+4); });
+    const sgn=new THREE.Mesh(new THREE.PlaneGeometry(1.6,0.5),new THREE.MeshBasicMaterial({map:sgx,transparent:true})); sgn.position.set(PZ.cam.x+1.2,1.6,PZ.cam.z+0.6); sgn.rotation.y=-0.3; outG.add(sgn);
+    const sp=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,1.4,6),M("#8a8f99")); sp.position.set(PZ.cam.x+1.2,0.7,PZ.cam.z+0.62); outG.add(sp);
     // 매표소
     const bt=new THREE.Group(); bt.position.set(BOOTH.x,0,BOOTH.z);
     const bb=new THREE.Mesh(new THREE.BoxGeometry(2.4,2.5,2.0),M("#fff3e0")); bb.position.y=1.25; bt.add(bb);
@@ -1027,7 +1094,7 @@ const World=(()=>{
     const roundT=(x,z,s)=>{ const g=new THREE.Group(); const tr=new THREE.Mesh(flat(new THREE.CylinderGeometry(0.14*s,0.2*s,1.6*s,6)),M("#a0703f")); tr.position.y=0.8*s; const lf=new THREE.Mesh(flat(new THREE.IcosahedronGeometry(1.1*s,0)),M(["#6cc56c","#7ccf6a","#58b65e"][Math.floor(Math.random()*3)])); lf.position.y=2.2*s; lf.rotation.y=Math.random()*3; g.add(tr,lf); g.position.set(x,0,z); outG.add(g); C[0].push([x-0.3*s,x+0.3*s,z-0.3*s,z+0.3*s]); };
     const bush=(x,z,s)=>{ const b=new THREE.Mesh(flat(new THREE.IcosahedronGeometry(0.55*s,0)),M(Math.random()<0.5?"#7fd07a":"#6cc56c")); b.position.set(x,0.4*s,z); b.rotation.y=Math.random()*3; outG.add(b); };
     [[-4.4,9],[4.4,9],[-4.4,15],[4.4,15],[-4.4,21],[4.4,21],[-15.5,2.5],[15.5,2.5]].forEach(([x,z])=>coneT(x,z,1));
-    [[-12,9],[12,10],[-14,15],[13,17],[-11,24],[12,26],[-20,4],[20,3],[-21,20],[20,22],[-9,32],[9,33],[-16,30],[16,31],[0,38],[-24,10],[24,12],[-19,-10],[19,-12],[-20,-22],[20,-24],[-8,-30],[8,-31]].forEach(([x,z])=>roundT(x,z,0.9+Math.random()*0.5));
+    [[-20,9],[12,10],[-20,15.5],[13,17],[-11,24],[12,26],[-20,4],[20,3],[-21,20],[20,22],[-9,32],[9,33],[-16,30],[16,31],[0,38],[-24,10],[24,12],[-19,-10],[19,-12],[-20,-22],[20,-24],[-8,-30],[8,-31]].forEach(([x,z])=>roundT(x,z,0.9+Math.random()*0.5));
     for(let x=-13.4;x<=13.4;x+=0.9){ if(Math.abs(x)<7.2) continue; if(x>4.5&&x<10) continue; bush(x,0.9,0.9); }
     for(let i=0;i<12;i++){ bush(-15.2-Math.random()*1.5,-1-i*2,1+Math.random()*0.4); bush(15.2+Math.random()*1.5,-1-i*2,1+Math.random()*0.4); }
     for(let i=0;i<60;i++){ const f=new THREE.Mesh(new THREE.SphereGeometry(0.07,6,4),M(["#ff8fb1","#ffd166","#ffffff","#c39bff"][i%4])); const s=i%2?1:-1; f.position.set(s*(4.2+Math.random()*1.2),0.12,7+Math.random()*24); outG.add(f); }
@@ -1045,6 +1112,15 @@ const World=(()=>{
     x.strokeStyle="#f6d7a0"; x.lineWidth=14; x.beginPath(); x.ellipse(cx,cy,190,46,-0.25,0,Math.PI*2); x.stroke();
     x.fillStyle="#ffffffcc"; fitText(x,"우리 반 3D 우주 전시관",440,40,700); x.fillText("우리 반 3D 우주 전시관",w/2,940);
     bannerTex.needsUpdate=true;
+    if(pzTex){ const c=pzTex.image, x=c.getContext("2d"), W=c.width, H=c.height;
+      const g2=x.createLinearGradient(0,0,0,H); g2.addColorStop(0,"#16204a"); g2.addColorStop(1,"#3b2a6e"); x.fillStyle=g2; x.fillRect(0,0,W,H);
+      for(let i=0;i<170;i++){ x.globalAlpha=Math.random()*0.8+0.2; x.fillStyle=Math.random()<0.2?"#ffe7a3":"#fff"; const r=Math.random()*1.8+0.4; x.beginPath(); x.arc(Math.random()*W,Math.random()*H,r,0,7); x.fill(); } x.globalAlpha=1;
+      x.strokeStyle="#ffd166"; x.lineWidth=6; rrect(x,14,14,W-28,H-28,26); x.stroke();
+      x.textAlign="center"; x.fillStyle="#ffd166"; fitText(x,"✨ 우리는 모두 별의 물질로 이루어져 있다 ✨",920,62,900); x.fillText("✨ 우리는 모두 별의 물질로 이루어져 있다 ✨",W/2,105);
+      x.fillStyle="#e6e9ff"; x.font=`700 34px ${FONT}`; x.fillText("— 칼 세이건",W/2,160);
+      x.fillStyle="#ffffff"; fitText(x,"같은 하늘을 바라본 우리, 함께라서 더 빛나요",880,46,800); x.fillText("같은 하늘을 바라본 우리, 함께라서 더 빛나요",W/2,245);
+      const d=new Date(); const foot=`${exMeta.cls||""} 우주 탐험대 · ${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()}`;
+      x.fillStyle="#ffd166"; fitText(x,foot,800,40,900); x.fillText(foot,W/2,320); pzTex.needsUpdate=true; }
     const s=signTex.image, y=s.getContext("2d"); y.clearRect(0,0,s.width,s.height); y.fillStyle="#7a5c3a"; y.textAlign="center"; y.textBaseline="middle"; fitText(y,"우 주 전 시 관",900,84,900); y.fillText("우 주 전 시 관",512,66); signTex.needsUpdate=true;
   }
 
@@ -1314,16 +1390,49 @@ const World=(()=>{
     if(kind===actKind) return; actKind=kind; const b=$("#act");
     if(!kind){ b.style.display="none"; return; }
     const hn=$("#hint"); if(hn) hn.style.opacity="0";
-    b.style.display=""; b.textContent=kind==="ticket"?"🎫 입장권 받기":kind==="myticket"?"🎫 내 입장권 보기":kind==="slide"?"🛝 미끄럼틀 타기!":"🎫 입장권이 필요해요";
+    b.style.display=""; b.textContent=kind==="ticket"?"🎫 입장권 받기":kind==="myticket"?"🎫 내 입장권 보기":kind==="slide"?"🛝 미끄럼틀 타기!":kind==="photo"?"📸 포토존에서 사진 찍기":"🎫 입장권이 필요해요";
   }
-  function doAction(){ if(actKind==="ticket"||actKind==="myticket"||actKind==="gate") Gallery.openTicket(); else if(actKind==="slide") startRide(); }
+  function doAction(){ if(actKind==="ticket"||actKind==="myticket"||actKind==="gate") Gallery.openTicket(); else if(actKind==="slide") startRide(); else if(actKind==="photo") countdown(DB.now()+3200,false); }
   function updateAction(){
     if(ride) return setAction(null);
     const dB=Math.hypot(me.x-(BOOTH.x-1.6),me.z-BOOTH.z);
     if(me.lv===0&&dB<2.6) return setAction(gateOpen?"myticket":"ticket");
     if(me.lv===0&&!gateOpen&&Math.abs(me.x)<2.2&&me.z>-0.5&&me.z<2.6) return setAction("gate");
     if(me.lv===1&&me.x>ATR.x1&&me.x<ATR.x1+1.6&&Math.abs(me.z-HC.z)<1.3) return setAction("slide");
+    if(me.lv===0&&!cd&&inPZ(me.x,me.z)) return setAction("photo");
     setAction(null);
+  }
+  /* ---- 단체사진 ---- */
+  let cd=null;
+  function photoSpot(){
+    // 번호대로 자리 배정: 1~10번 앞줄, 11~20번 가운데 줄, 21~30번 뒷줄 (선생님은 앞줄 가운데 앞)
+    const n=parseInt(ST.me&&ST.me.num,10);
+    if(ST.me&&ST.me.teacher||!n){ if(ST.me&&ST.me.teacher) return {x:PZ.x1+0.2,z:10.0}; }
+    const i=n?((n-1)%30):(hashId(DB.uid||"me")%30); const tier=Math.floor(i/10), col=i%10; const t=PZ.tiers[tier];
+    return {x:PZ.x0+0.55+col*((PZ.x1-PZ.x0-1.1)/9)+(tier===1?0.38:0), z:(t.z0+t.z1)/2}; }
+  function goPhotoSpot(){ const p=photoSpot(); me.lv=0; me.x=p.x; me.z=p.z; me.y=heightAt(p.x,p.z,0); me.rot=0; ride=null; walkTo=null; yaw=0; pitch=0.25; if(!fp) dist=5; sendLive(true); }
+  function countdown(at,group){
+    if(cd) return; closeModal();
+    cd={at,group}; const ov=$("#photoOv"); ov.style.display="flex"; $("#pzGo").onclick=()=>goPhotoSpot();
+    const tick=()=>{ if(!cd) return; const left=cd.at-DB.now(); const n=Math.ceil(left/1000);
+      $("#pzNum").textContent=n>0?n:"📸"; $("#pzMsg").textContent=group?"다 같이 단체사진! 포토존 계단에 모여요":"포토존에서 찰칵! 카메라를 보고 웃어요 😄";
+      $("#pzGo").style.display=(!inPZ(me.x,me.z)||me.lv!==0)?"":"none";
+      if(left<1200&&inPZ(me.x,me.z)&&me.lv===0&&Math.abs(me.rot)>0.05){ me.rot=0; sendLive(true); }
+      if(!running){ cd=null; ov.style.display="none"; return; }
+      if(left<=0){ ov.classList.add("flash"); setTimeout(()=>{ const r=capture(); ov.style.display="none"; ov.classList.remove("flash"); cd=null; Gallery.showPhoto(r.url,r.n,group); },120); return; }
+      setTimeout(tick,150); };
+    tick();
+  }
+  function capture(){
+    const pcam=new THREE.PerspectiveCamera(42,1.6,0.1,200); pcam.position.set(PZ.cam.x,PZ.cam.y,PZ.cam.z); pcam.lookAt(PZ.look.x,PZ.look.y,PZ.look.z);
+    const pr=R.getPixelRatio(); const vis=outG.visible; outG.visible=true; if(marker) marker.visible=false;
+    const own=meAv?meAv.visible:true; if(meAv) meAv.visible=true;
+    const tags=[]; [meAv,...Object.values(others).map(o=>o.av)].forEach(a=>{ if(a&&a.userData.tag){ tags.push([a.userData.tag,a.userData.tag.visible]); a.userData.tag.visible=false; } });
+    R.setPixelRatio(1); R.setSize(1600,1000,false); R.render(scene,pcam);
+    const shot=R.domElement.toDataURL("image/jpeg",0.92);
+    R.setPixelRatio(pr); outG.visible=vis; if(meAv) meAv.visible=own; tags.forEach(([t,v])=>t.visible=v); resize();
+    let n=(inPZ(me.x,me.z)&&me.lv===0)?1:0; for(const k in others){ const o=others[k]; if(o.av.visible&&o.lv===0&&inPZ(o.x,o.z)) n++; }
+    return {url:shot,n};
   }
   function setGate(open){
     gateOpen=open; if(!gateMesh) return; const bar=gateMesh.userData.bar;
@@ -1490,9 +1599,9 @@ const World=(()=>{
     me.rot=Math.atan2(f.x-cx,f.z-cz); const al=port?-0.32:-0.55; yaw=Math.atan2(f.nx*Math.cos(al)+tx*Math.sin(al),f.nz*Math.cos(al)+tz*Math.sin(al));
     pitch=fp?0.0:(port?0.4:0.12); if(!fp) dist=Math.min(dist,3.4); sendLive(true); return true;
   }
-  function stop(){ running=false; cancelAnimationFrame(raf); jx=jy=0; ride=null; for(const k in keys) keys[k]=false; for(const k in others) removeOther(k); }
+  function stop(){ running=false; cancelAnimationFrame(raf); cd=null; const po=$("#photoOv"); if(po){ po.style.display="none"; po.classList.remove("flash"); } jx=jy=0; ride=null; for(const k in keys) keys[k]=false; for(const k in others) removeOther(k); }
   function pauseInput(v){ inputPaused=v; if(v){ jx=jy=0; walkTo=null; ptrs={}; pinch=null; $("#knob").style.transform=""; for(const k in keys) keys[k]=false; } }
-  return {init,setExhibition,spawnMe,setWorks,goToWork,stop,pauseInput,upsertOther,removeOther,emote,setGate,startRide,
+  return {countdown,goPhotoSpot,init,setExhibition,spawnMe,setWorks,goToWork,stop,pauseInput,upsertOther,removeOther,emote,setGate,startRide,
     _state:()=>({cam:cam?{x:cam.position.x,y:cam.position.y,z:cam.position.z}:null,vis:{out:outG&&outG.visible,b1:G[-1]&&G[-1].visible,f2:G[1]&&G[1].visible},me:{...me},frames:Object.keys(frameById).length,others:Object.keys(others).length,fp,yaw,pitch,dist,gate:gateOpen,ride:!!ride,act:actKind,colliders:C[-1].length+C[0].length+C[1].length}),
     _info:()=>({calls:R.info.render.calls,tris:R.info.render.triangles,geo:R.info.memory.geometries,tex:R.info.memory.textures}),
     _tp:(x,z,lv)=>{ me.x=x; me.z=z; me.lv=lv; me.y=heightAt(x,z,lv); walkTo=null; },
