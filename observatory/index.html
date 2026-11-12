@@ -146,6 +146,14 @@ section.show{display:block}
 .quiz{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
 .qbtn{border:2px solid var(--line);background:var(--bg2);color:var(--ink);border-radius:12px;padding:14px 4px;font-weight:900;font-size:16px}
 .qbtn.wrong{border-color:var(--bad);color:var(--bad);animation:shake .35s}
+.pzans{display:grid;gap:8px;margin:14px 0}
+.pzslot{min-height:52px;border:2px dashed #3a4a85;border-radius:12px;display:flex;align-items:center;padding:8px 14px;font-size:18px;font-weight:800;color:#5d6ba3}
+.pzslot.fill{border-style:solid;border-color:var(--ok);background:rgba(61,220,151,.12);color:var(--ink)}
+.pzpool{display:grid;gap:8px}
+.pzc{border:2px solid var(--amber);background:#1a2450;color:var(--ink);border-radius:12px;padding:14px 16px;font-size:18px;font-weight:800;text-align:left;min-height:52px}
+.pzc.used{visibility:hidden}
+.pzc.wrong{border-color:var(--bad);animation:shake .35s}
+.pzdone{background:rgba(61,220,151,.14);border:1px solid var(--ok);border-radius:14px;padding:14px;font-size:18px;line-height:1.6;font-weight:800;margin-top:6px}
 .qbtn.right{border-color:var(--ok);background:var(--ok);color:#06210f}
 @keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 .clue{background:#0e1636;border-left:4px solid var(--amber);padding:10px 12px;border-radius:8px;margin:10px 0;font-size:15px;line-height:1.6}
@@ -1085,6 +1093,16 @@ const CATS = {
 };
 const CAT_ORDER = ["star","planet","satellite","asteroid","comet","dwarf"];
 
+/* 부품 용도 문장 퍼즐 (3조각) — 순서대로 맞혀야 다음 부품을 조립할 수 있어요 */
+const PUZ = {
+  tripod:["망원경 전체를 단단히 받쳐서","흔들림을 막아 주기 때문에","상이 번지지 않아요."],
+  mount:["망원경을 위아래·좌우로 돌려서","보고 싶은 천체 쪽으로","방향을 맞춰 줘요."],
+  counterweight:["경통 반대쪽에서 무게를 맞춰서","망원경이 한쪽으로 기울지 않고","부드럽게 움직이게 해요."],
+  tube:["빛이 지나가는 긴 통으로","바깥의 다른 빛을 막아서","선명한 상을 만들게 해요."],
+  objective:["천체에서 오는 빛을 모아","상을 만드는 렌즈예요.","클수록 어두운 천체도 보여요."],
+  eyepiece:["눈을 대는 쪽의 렌즈로","대물렌즈가 만든 상을","크게 확대해서 보여 줘요."],
+  finder:["넓은 범위를 보는 작은 망원경으로","목표 천체를 먼저 찾은 뒤","본 망원경으로 자세히 봐요."]
+};
 const PARTS = [
   {id:"tripod",   name:"삼각대",   need:null,  role:"망원경이 흔들리지 않게 단단히 받쳐 줘요. 흔들리면 상도 흔들려서 사진이 번져요."},
   {id:"mount",    name:"가대",     need:"tripod", role:"망원경을 위아래·좌우로 돌려서 원하는 천체 쪽으로 향하게 해요."},
@@ -1099,6 +1117,7 @@ const PARTS = [
 const KEY = "scope-gallery-v2";
 let S = {placed:[], got:[]};
 try{ const s = JSON.parse(localStorage.getItem(KEY)||"null"); if(s && Array.isArray(s.placed)) S = s; }catch(e){}
+if(!Array.isArray(S.puz)) S.puz = S.placed.slice();   // 예전 기록은 퍼즐을 푼 것으로 봄
 let GALLERY = "";
 try{
   const g = new URLSearchParams(location.search).get("g");
@@ -1139,7 +1158,7 @@ function setImg(img, o, onfail){
 
 /* ---------- navigation ---------- */
 function go(view){
-  if(view==="sky" && S.placed.length<PARTS.length){ toast("먼저 망원경을 다 조립해야 해요!"); return; }
+  if(view==="sky" && (S.placed.length<PARTS.length || S.puz.length<PARTS.length)){ const pend=S.placed.find(q=>!S.puz.includes(q)); if(pend&&S.placed.length===PARTS.length){ toast("마지막 문장 퍼즐을 완성해요! 🧩"); openPuzzle(pend); } else toast("먼저 망원경을 다 조립해야 해요!"); return; }
   document.querySelectorAll("section").forEach(s=>s.classList.toggle("show", s.id===view));
   document.querySelectorAll(".step").forEach(b=>b.classList.toggle("on", b.dataset.go===view));
   if(view==="sky") requestAnimationFrame(drawSky);
@@ -1150,7 +1169,7 @@ document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=
 
 function updateCounter(){
   $("#cnt").textContent=S.got.length; $("#tot").textContent=OBJS.length;
-  $("#stepSky").disabled = S.placed.length<PARTS.length;
+  $("#stepSky").disabled = S.placed.length<PARTS.length || S.puz.length<PARTS.length;
 }
 
 /* ---------- STEP 1 build ---------- */
@@ -1179,7 +1198,7 @@ function refreshBuild(){
     g.classList.toggle("next", !!next && !S.placed.includes(id) && isReady(id));
   });
   $("#buildProg").textContent = `${S.placed.length} / ${PARTS.length} 부품`;
-  const done = S.placed.length===PARTS.length;
+  const done = S.placed.length===PARTS.length && S.puz.length>=PARTS.length;
   $("#goSky").hidden = !done;
   updateCounter();
 }
@@ -1212,12 +1231,41 @@ function tryPlace(id, x, y){
     return;
   }
   const p = PARTS.find(x=>x.id===id);
+  const pend = S.placed.find(q=>!S.puz.includes(q));
+  if(pend){ toast(`먼저 ${partName(pend)} 문장 퍼즐을 완성해요! 🧩`); openPuzzle(pend); return; }
   if(p.need && !S.placed.includes(p.need)){ toast(`먼저 ${josa(partName(p.need),"을","를")} 설치해야 해요!`); return; }
   S.placed.push(id); save();
   selectCard(null);
   renderCards(); refreshBuild();
-  const done = S.placed.length===PARTS.length;
-  $("#info").innerHTML = `<div class="t">✔ ${p.name} 설치 완료</div>${p.role}` + (done?`<div style="margin-top:8px;color:var(--ok);font-weight:900">🎉 망원경 완성! 이제 밤하늘을 관측하러 가요.</div>`:"");
+  $("#info").innerHTML = `<div class="t">🔧 ${p.name} 설치! 이제 문장 퍼즐을 풀어요</div>${p.name}의 쓰임새를 맞히면 다음 부품을 조립할 수 있어요.`;
+  setTimeout(()=>openPuzzle(id),350);
+}
+function openPuzzle(id){
+  const p=PARTS.find(x=>x.id===id), parts=PUZ[id];
+  let order=[0,1,2]; do{ order.sort(()=>Math.random()-0.5); }while(order[0]===0&&order[1]===1);
+  let k=0, miss=0;
+  openModal(`<div style="padding:4px 4px 8px">
+    <h2 class="title" style="margin:0 0 4px">🧩 ${josa(p.name,"은","는")} 어떤 일을 할까요?</h2>
+    <p style="margin:0;color:var(--mute)">조각을 <b style="color:var(--ink)">문장 순서대로</b> 눌러 문장을 완성하세요. 완성하면 다음 부품을 조립할 수 있어요.</p>
+    <div class="pzans">${parts.map((_,i)=>`<div class="pzslot" id="pzs${i}">${i+1}번째 조각</div>`).join("")}</div>
+    <div class="pzpool" id="pzpool">${order.map(i=>`<button class="pzc" data-i="${i}">${parts[i]}</button>`).join("")}</div>
+    <div id="pzend"></div></div>`);
+  document.querySelectorAll("#pzpool .pzc").forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.i;
+    if(i!==k){ miss++; b.classList.remove("wrong"); void b.offsetWidth; b.classList.add("wrong");
+      toast(miss>=2?`💡 힌트: 문장은 「${parts[k].slice(0,6)}…」로 이어져요.`:"순서가 달라요. 문장을 소리 내어 읽어 보세요 🙂"); return; }
+    const sl=$("#pzs"+k); sl.textContent=parts[i]; sl.classList.add("fill"); b.classList.add("used"); k++;
+    if(k===parts.length){
+      if(!S.puz.includes(id)){ S.puz.push(id); save(); }
+      const done=S.placed.length===PARTS.length;
+      $("#pzpool").style.display="none";
+      $("#pzend").innerHTML=`<div class="pzdone">✅ ${p.name}: ${parts.join(" ")}</div>
+        <div class="btnrow" style="margin-top:12px"><button class="sbtn pri" id="pzNext">${done?"🔭 망원경 완성! 밤하늘 관측하러 가기":"🔧 다음 부품 조립하기"}</button></div>`;
+      $("#info").innerHTML=`<div class="t">✔ ${p.name} 설치 완료</div>${parts.join(" ")}`+(done?`<div style="margin-top:8px;color:var(--ok);font-weight:900">🎉 망원경 완성! 이제 밤하늘을 관측하러 가요.</div>`:"");
+      $("#pzNext").onclick=()=>{ closeModal(); if(done) go("sky"); };
+      refreshBuild();
+    }
+  });
 }
 function bindCard(card){
   const id=card.dataset.part;
@@ -1493,7 +1541,7 @@ function renderAlbum(){
 $("#resetBtn").addEventListener("click",()=>{
   openModal(`<h2 class="title" style="margin-top:0">처음부터 다시 할까요?</h2><p style="color:var(--mute)">조립한 망원경과 도감에 모은 사진이 모두 사라져요.</p>
     <div class="btnrow"><button class="sbtn pri" id="rYes">네, 처음부터</button><button class="sbtn" id="rNo">아니요</button></div>`);
-  $("#rYes").onclick=()=>{ S={placed:[],got:[]}; save(); closeModal(); renderCards(); refreshBuild(); $("#info").innerHTML='<div class="t">조립 안내</div>먼저 <b>삼각대</b>를 끌어다 망원경 그림 맨 아래 점선 자리에 놓아 보세요.'; go("build"); };
+  $("#rYes").onclick=()=>{ S={placed:[],got:[],puz:[]}; save(); closeModal(); renderCards(); refreshBuild(); $("#info").innerHTML='<div class="t">조립 안내</div>먼저 <b>삼각대</b>를 끌어다 망원경 그림 맨 아래 점선 자리에 놓아 보세요.'; go("build"); };
   $("#rNo").onclick=closeModal;
 });
 
