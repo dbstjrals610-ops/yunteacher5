@@ -68,6 +68,25 @@ a{color:#2f6fde}
 #joy{position:absolute;left:calc(22px + env(safe-area-inset-left));bottom:calc(22px + env(safe-area-inset-bottom));width:132px;height:132px;border-radius:50%;background:rgba(255,255,255,.35);border:3px solid rgba(255,255,255,.75);touch-action:none;box-shadow:0 4px 18px rgba(0,0,0,.1)}
 #knob{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;background:#fff;box-shadow:0 3px 10px rgba(0,0,0,.2);pointer-events:none}
 #hint{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom));background:rgba(43,47,58,.82);color:#fff;padding:10px 16px;border-radius:14px;font-size:14px;line-height:1.5;text-align:center;max-width:min(560px,86vw);pointer-events:none;transition:opacity .6s}
+#obs{background:#070b1a;overflow:hidden}
+#obs .obar{position:absolute;left:0;right:0;top:0;height:64px;display:flex;align-items:center;gap:10px;padding:0 12px;background:#0b1230;border-bottom:1px solid #1f2a55}
+#obs .pill{max-width:55%}
+#obsFrame{position:absolute;left:0;right:0;top:64px;bottom:0;width:100%;height:calc(100% - 64px);border:0;background:#070b1a}
+.tb.locked{background:#5b6380;color:#e6e9f5}
+.tb.pulse{animation:pulse 1.2s ease-in-out 4}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12);box-shadow:0 0 0 8px rgba(226,87,76,.35)}}
+#act{position:absolute;left:0;right:0;margin:0 auto;width:max-content;bottom:calc(96px + env(safe-area-inset-bottom));border:0;border-radius:999px;background:var(--orange);color:#fff;font-size:20px;font-weight:900;padding:14px 26px;box-shadow:0 6px 20px rgba(226,87,76,.45);animation:pulse 1.4s ease-in-out infinite;z-index:3;white-space:nowrap}
+.ticket{position:relative;display:flex;border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.18);max-width:620px;margin:6px auto;background:#fff}
+.ticket .l{flex:1;padding:22px 24px;background:linear-gradient(135deg,#1c2550,#3a2a6b);color:#fff}
+.ticket .r{width:150px;padding:18px 12px;text-align:center;background:#fff7e6;border-left:3px dashed #e8c98a;display:flex;flex-direction:column;justify-content:center;gap:6px}
+.ticket .l h3{margin:0 0 4px;font-size:15px;color:#ffd166;letter-spacing:2px}
+.ticket .l h2{margin:0 0 12px;font-size:26px}
+.ticket .l .who{font-size:20px;font-weight:800}
+.ticket .stamp{display:inline-block;border:3px solid #e2574c;color:#e2574c;font-weight:900;border-radius:10px;padding:4px 10px;transform:rotate(-8deg);font-size:18px}
+.albumpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:8px;margin:8px 0 14px;max-height:230px;overflow:auto}
+.albumpick button{border:3px solid transparent;border-radius:12px;background:#0d1230;padding:4px;color:#fff;font-size:12px;font-weight:700}
+.albumpick button.on{border-color:var(--green)}
+.albumpick img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px;display:block;background:#1c2550}
 #cross{position:absolute;left:50%;top:50%;width:10px;height:10px;margin:-5px;border-radius:50%;border:2px solid rgba(255,255,255,.9);box-shadow:0 0 0 1px rgba(0,0,0,.3);display:none;pointer-events:none}
 
 /* modal */
@@ -205,6 +224,15 @@ table.wt img{width:52px;height:52px;object-fit:cover;border-radius:8px;display:b
 <!-- 교사 -->
 <section id="teacher" class="screen"><div class="wrap" id="tWrap"></div></section>
 
+<!-- 천체관측관 -->
+<section id="obs" class="screen">
+  <div class="obar">
+    <div class="pill"><span class="loc" style="background:#1c2550">🔭 천체관측관</span><span class="ttl" id="obsWho"></span></div>
+    <div class="tbtns"><button class="tb or locked" id="toGal">🔒 전시관</button><button class="tb" id="obsOut" title="처음 화면">↩<span class="t">처음으로</span></button></div>
+  </div>
+  <iframe id="obsFrame" title="천체관측관" allow="clipboard-write; fullscreen"></iframe>
+</section>
+
 <!-- 3D 전시관 -->
 <section id="world" class="screen">
   <canvas id="cv" tabindex="0"></canvas>
@@ -217,7 +245,7 @@ table.wt img{width:52px;height:52px;object-fit:cover;border-radius:8px;display:b
         <button class="tb or" id="bList">🖼️<span class="t">작품 목록</span></button>
         <button class="tb" id="bWall">💬<span class="t">방명록</span></button>
         <button class="tb" id="bFull" title="전체 화면">⛶</button>
-        <button class="tb" id="bExit">↩<span class="t">나가기</span></button>
+        <button class="tb" id="bExit">🔭<span class="t">관측관</span></button>
       </div>
     </div>
     <div id="joy"><div id="knob"></div></div>
@@ -230,6 +258,7 @@ table.wt img{width:52px;height:52px;object-fit:cover;border-radius:8px;display:b
       <button id="zOut" aria-label="멀리">－</button>
       <button id="bView" class="view">1인칭</button>
     </div>
+    <button id="act" style="display:none"></button>
     <div id="hint">왼쪽 아래 동그라미를 밀어서 걷고, 화면을 끌어서 둘러봐요.<br>바닥을 누르면 그쪽으로 걸어가고, 액자를 누르면 크게 볼 수 있어요.</div>
   </div>
 </section>
@@ -420,7 +449,7 @@ async function boot(){
     if(typeof THREE==="undefined"){ $("#bootMsg").textContent="3D 기능을 불러오지 못했어요. 인터넷 연결을 확인하고 새로고침해 주세요."; return; }
     DB=MOCK?makeMockDB(CFG):await withTimeout(makeFirebaseDB(CFG),20000,"TIMEOUT");
     await withTimeout(DB.ready(),15000,"TIMEOUT");
-    // 하늘 사진관에서 넘어온 사진 정보 보관
+    // 천체관측관에서 넘어온 사진 정보 보관
     const add=PARAMS.get("add");
     if(add){ try{ sessionStorage.setItem("gal-add",add); }catch(e){} }
     if(add){ try{ const u=new URL(location.href); u.searchParams.delete("add"); history.replaceState(null,"",u.toString()); }catch(e){} }
@@ -483,7 +512,7 @@ const Join={
     if(!name){ $("#jErr").textContent="이름을 입력해 주세요."; $("#jName").focus(); return; }
     ST.me={num,name,a:this.look.a,h:this.look.h,teacher,nick:(num?num+"번 ":"")+name};
     try{ localStorage.setItem("gal-me",JSON.stringify({code:ST.code,num,name,a:this.look.a,h:this.look.h})); }catch(e){}
-    Gallery.enter();
+    if(sessionStorage.getItem("gal-add")) Gallery.enter(); else App.toObs();
   }
 };
 
@@ -492,13 +521,14 @@ const Join={
    ============================================================ */
 const Gallery={
   works:{}, hidden:{}, claps:{}, live:{},
-  enter(){
+  enter(opts={}){
     const c=ST.code; this.works={}; this.hidden={}; this.claps={}; this.live={};
     show("world");
+    $("#bExit").innerHTML=IS_TEACHER_PAGE?'↩<span class="t">나가기</span>':'🔭<span class="t">관측관</span>';
     $("#exTitle").textContent=`${ST.meta.cls||""} ${ST.meta.title||""}`.trim();
     World.init();
     World.setExhibition(ST.meta);
-    World.spawnMe(ST.me); World.setWorks([]);
+    World.spawnMe(ST.me); World.setWorks([]); World.setGate(!!this.ticket()||isTeacher());
     const U=ST.unsub;
     U.push(DB.on(`ex/${c}/meta`,m=>{ if(!m){ this.kick("전시회가 삭제되었어요."); return; } ST.meta=m; $("#exTitle").textContent=`${m.cls||""} ${m.title||""}`.trim(); World.setExhibition(m); this.updateButtons();
       if(m.open===false&&!isTeacher()) this.kick("선생님이 전시관을 닫았어요."); }));
@@ -519,14 +549,15 @@ const Gallery={
     $("#bUpload").onclick=()=>Upload.open();
     $("#bList").onclick=()=>this.openList();
     $("#bWall").onclick=()=>this.openWall();
-    $("#bExit").onclick=async()=>{ if(await ask("전시관에서 나갈까요?","나가기")) this.leave(); };
+    $("#bExit").onclick=async()=>{ if(IS_TEACHER_PAGE){ if(await ask("전시관에서 나갈까요?","나가기")) this.leave(); } else this.leave(); };
     $("#bFull").onclick=()=>{ const d=document; try{ if(!d.fullscreenElement) d.documentElement.requestFullscreen().catch(()=>{}); else d.exitFullscreen(); }catch(e){} };
     // 처음 안내
     setTimeout(()=>{ const add=sessionStorage.getItem("gal-add");
-      if(add&&this.uploadAllowed()){ Upload.open(add); try{ sessionStorage.removeItem("gal-add"); }catch(e){} }
+      if(opts.hang&&this.uploadAllowed()){ Upload.open(null,opts.hang); }
+      else if(add&&this.uploadAllowed()){ Upload.open(add); try{ sessionStorage.removeItem("gal-add"); }catch(e){} }
       else if(!isTeacher()&&this.uploadAllowed()&&!this.myWorks().length&&!isModalOpen()){
-        openModal(`<div style="text-align:center;padding:10px"><div style="font-size:54px">📷</div><h2 style="margin:6px 0">${esc(ST.me.name)}, 어서 와요!</h2>
-          <p class="sub">천체 사진관에서 찍은 사진을 전시관에 걸어 볼까요?</p>
+        openModal(`<div style="text-align:center;padding:10px"><div style="font-size:54px">🏛️</div><h2 style="margin:6px 0">${esc(ST.me.name)}, 어서 와요!</h2>
+          <p class="sub">관측관에서 찍은 사진을 전시관에 걸어 볼까요?<br>전시관에 들어가려면 오른쪽 <b>🎫 매표소</b>에서 입장권을 받아요.</p>
           <div class="btnrow"><button class="btn" id="wLater">먼저 구경할래요</button><button class="btn grn" id="wUp">📷 사진 올리기</button></div></div>`);
         $("#wLater").onclick=closeModal; $("#wUp").onclick=()=>Upload.open();
       }
@@ -549,7 +580,26 @@ const Gallery={
     ST.unsub.forEach(f=>{ try{f();}catch(e){} }); ST.unsub=[];
     closeModal(); World.stop();
     if(IS_TEACHER_PAGE) { Teacher.start(); return; }
+    if(!silent){ App.toObs(); return; }
     show("join"); $("#stepMe").style.display=""; $("#stepCode").style.display="none";
+  },
+  ticketKey(){ return `gal-ticket-${ST.code}-${DB.uid}`; },
+  ticket(){ try{ return JSON.parse(localStorage.getItem(this.ticketKey())||"null"); }catch(e){ return null; } },
+  openTicket(){
+    const tk=this.ticket(); const m=ST.meta||{}; const d=new Date();
+    const body=t=>`<div class="ticket"><div class="l"><h3>ADMISSION TICKET</h3><h2>🪐 우리 반 3D 우주 전시관</h2>
+        <div style="opacity:.85;margin-bottom:10px">${esc(m.cls||"")} · ${esc(m.title||"")}</div>
+        <div class="who">${esc(ST.me.nick)}</div><div style="opacity:.75;margin-top:4px">${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} · 지하 1층 ~ 2층 전체 관람</div></div>
+      <div class="r"><div style="font-size:13px;color:#8a6a2a;font-weight:800">입장권 번호</div><div style="font-size:22px;font-weight:900;color:#2b2f3a">${t?esc(t.no):"-"}</div>
+        ${t?'<div><span class="stamp">입장 OK</span></div>':'<div style="font-size:13px;color:#8a6a2a">아직 받지 않았어요</div>'}</div></div>`;
+    const b=openModal(`<h2 style="margin:0 0 10px">🎫 매표소</h2><div id="tkBox">${body(tk)}</div>
+      <p class="small" style="text-align:center;margin:12px 0 0">미끄럼틀은 2층 로비 가운데, 태양계 모형관은 지하 1층에 있어요.</p>
+      <div class="btnrow">${tk?'<button class="btn pri" id="tkGo">입장하러 가기 🚪</button>':'<button class="btn pri" id="tkGet">입장권 받기 🎫</button>'}</div>`);
+    const go=()=>{ closeModal(); toast("정문 개찰구가 열렸어요! 안으로 들어가 보세요 🚪",3000); };
+    if($("#tkGo")) $("#tkGo").onclick=go;
+    if($("#tkGet")) $("#tkGet").onclick=()=>{ const t={no:(ST.me.num?String(ST.me.num).padStart(2,"0"):"T")+"-"+String(Math.floor(100+Math.random()*900)),t:Date.now()};
+      try{ localStorage.setItem(this.ticketKey(),JSON.stringify(t)); }catch(e){} World.setGate(true); World.emote("🎫");
+      $("#tkBox").innerHTML=body(t); const g=$("#tkGet"); g.textContent="입장하러 가기 🚪"; g.onclick=go; };
   },
   sendLive(p){ if(!ST.code||!DB.uid) return; DB.set(`ex/${ST.code}/live/${DB.uid}`,p).catch(e=>console.warn("live",e)); },
   clapCount(id){ const c=this.claps[id]; return c?Object.keys(c).length:0; },
@@ -621,17 +671,37 @@ const Gallery={
 /* ============================================================
    사진 올리기
    ============================================================ */
+const App={
+  loaded:false, prog:{placed:0,total:7,got:[]},
+  obs(){ try{ const w=$("#obsFrame").contentWindow; return w&&w.OBS?w.OBS:null; }catch(e){ return null; } },
+  toObs(){
+    show("obs"); $("#obsWho").textContent=`${ST.meta?(ST.meta.cls||""):""} · ${ST.me?ST.me.nick:""}`;
+    if(!this.loaded){ this.loaded=true; $("#obsFrame").src="observatory/index.html?embed=1"; }
+    $("#toGal").onclick=()=>this.goGallery(); $("#obsOut").onclick=async()=>{ if(await ask("처음 화면(코드·이름 입력)으로 갈까요?","처음으로")){ show("join"); $("#stepMe").style.display=""; $("#stepCode").style.display="none"; } };
+    this.updateLock();
+  },
+  unlocked(){ return isTeacher()||this.prog.got.length>0||!!localStorage.getItem(`gal-hung-${ST.code}`); },
+  updateLock(){ const b=$("#toGal"); if(!b) return; const u=this.unlocked(); b.classList.toggle("locked",!u);
+    b.innerHTML=u?'🏛️<span class="t">&nbsp;3D 전시관 들어가기</span>':`🔒<span class="t">&nbsp;전시관 (${this.prog.placed<this.prog.total?"망원경 조립 → ":""}사진 1장 찍으면 열려요)</span>`; },
+  goGallery(){ if(!this.unlocked()){ toast("🔭 망원경을 조립하고 천체 사진을 1장 이상 찍으면 전시관이 열려요!",3200); return; } Gallery.enter(); }
+};
+window.SpaceApp={
+  obsProgress(p){ const was=App.unlocked(); App.prog=p; App.updateLock(); if(!was&&App.unlocked()&&$("#obs").classList.contains("show")){ toast("🎉 첫 사진 성공! 위쪽 '3D 전시관 들어가기'가 열렸어요.",3800); const b=$("#toGal"); b.classList.remove("pulse"); void b.offsetWidth; b.classList.add("pulse"); } },
+  hangFromObs(id){ if(!App.unlocked()) return; Gallery.enter({hang:id}); }
+};
+
 const Upload={
-  img:null,
-  open(addRaw){
+  img:null, objId:null,
+  open(addRaw,hangId){
     if(!Gallery.uploadAllowed()){ toast("지금은 사진 올리기가 꺼져 있어요."); return; }
     this.img=null;
     openModal(`<h2 style="margin:0 0 4px">📷 내 천체 사진 전시하기</h2>
-      <p class="small" style="margin:0 0 14px">천체 사진관에서 저장한 사진을 고르고, 복사한 설명을 붙여 넣으면 자동으로 채워져요.</p>
+      <p class="small" style="margin:0 0 6px">관측관에서 찍은 사진을 고르면 사진과 설명이 자동으로 채워져요. 설명에 <b>내가 알게 된 점</b>을 덧붙여 보세요.</p>
+      <div id="apick"></div>
       <div class="up">
         <label class="pick" id="pick"><input type="file" accept="image/*" id="ufile"><div id="pv">📷 여기를 눌러 사진 고르기<br><span class="small">(다운로드 폴더의 천체 사진)</span></div></label>
         <div>
-          <textarea class="inp paste" id="upaste" placeholder="📋 천체 사진관에서 복사한 설명을 여기에 길게 눌러 '붙여넣기' 하세요"></textarea>
+          <textarea class="inp paste" id="upaste" placeholder="📋 천체관측관에서 복사한 설명을 여기에 길게 눌러 '붙여넣기' 하세요"></textarea>
           <label class="f">천체 이름 *</label><input id="uname" class="inp" maxlength="30" placeholder="예) 목성">
           <label class="f">분류 *</label><select id="ucat" class="inp">${CAT_ORDER.map(k=>`<option value="${k}">${CATS[k].name}</option>`).join("")}</select>
           <label class="f">설명 (내가 알게 된 점)</label><textarea id="udesc" class="inp" maxlength="300" placeholder="이 천체의 특징을 써요"></textarea>
@@ -646,7 +716,7 @@ const Upload={
     $("#upaste").addEventListener("input",()=>this.fill(parseInfo($("#upaste").value)));
     $("#upaste").addEventListener("paste",()=>setTimeout(()=>this.fill(parseInfo($("#upaste").value)),30));
     $("#ucancel").onclick=closeModal; $("#ugo").onclick=()=>this.submit();
-    this.drawMine();
+    this.drawMine(); this.drawAlbum(hangId);
     if(addRaw) this.fromSky(addRaw);
   },
   fill(p){
@@ -670,11 +740,30 @@ const Upload={
   async fromSky(raw){
     let a=null; try{ a=JSON.parse(raw); }catch(e){ return; }
     this.fill({name:a.n,catKey:CATS[a.c]?a.c:catKeyFromText(a.c),desc:a.d,src:a.s});
-    $("#pv").innerHTML="천체 사진관의 사진을 가져오는 중…";
+    $("#pv").innerHTML="천체관측관의 사진을 가져오는 중…";
     for(const url of (a.u||[]).slice(0,3)){
       try{ if(!/^https:\/\/(upload\.wikimedia\.org|commons\.wikimedia\.org)\//.test(url)) continue; const im=await imgFromUrlViaFetch(url); if(!$("#pv")) return; this.setImg(im); toast("사진과 설명을 가져왔어요! '전시관에 걸기'를 누르세요."); return; }catch(e){ console.warn(e); }
     }
     if($("#pv")) $("#pv").innerHTML="사진을 자동으로 가져오지 못했어요.<br>📷 여기를 눌러 저장한 사진을 골라 주세요.";
+  },
+  drawAlbum(hangId){
+    const O=App.obs(); const el=$("#apick"); if(!el) return; this.objId=null;
+    if(!O){ el.innerHTML=""; return; }
+    let st=null; try{ st=O.state(); }catch(e){}
+    const got=(st&&st.got||[]).map(id=>O.objs.find(o=>o.id===id)).filter(Boolean);
+    if(!got.length){ el.innerHTML='<p class="small" style="background:#f1f5ff;padding:10px;border-radius:10px">🔭 아직 관측관에서 찍은 사진이 없어요. 아래에서 다른 사진을 골라도 돼요.</p>'; return; }
+    el.innerHTML=`<div style="font-weight:800;margin-top:6px">🔭 내 관측 도감 (${got.length}장) — 하나를 눌러 고르세요</div><div class="albumpick">${got.map(o=>`<button data-id="${esc(o.id)}"><img src="${esc(o.srcs[0])}" alt="" referrerpolicy="no-referrer">${esc(o.name)}</button>`).join("")}</div>`;
+    $$("#apick button[data-id]").forEach(b=>b.onclick=()=>{ $$("#apick button").forEach(x=>x.classList.toggle("on",x===b)); this.fromObj(got.find(o=>o.id===b.dataset.id)); });
+    if(hangId){ const b=$(`#apick button[data-id="${hangId}"]`); if(b) b.click(); }
+  },
+  async fromObj(o){
+    if(!o) return; this.objId=o.id;
+    this.fill({name:o.name,catKey:o.cat,desc:o.desc,src:`${o.credit} / Wikimedia Commons`});
+    $("#pv").innerHTML="관측 사진을 가져오는 중…"; this.img=null;
+    for(const url of o.srcs.slice(0,2)){
+      try{ const im=await imgFromUrlViaFetch(url); if(this.objId!==o.id||!$("#pv")) return; this.setImg(im); return; }catch(e){ console.warn(e); }
+    }
+    if($("#pv")&&this.objId===o.id) $("#pv").innerHTML="사진을 가져오지 못했어요 (인터넷 확인).<br>📷 여기를 눌러 사진 파일을 직접 골라도 돼요.";
   },
   drawMine(){
     const ls=Gallery.myWorks(); const el=$("#umine"); if(!el) return;
@@ -701,6 +790,7 @@ const Upload={
       await withTimeout(DB.set(`img/${c}/${wid}`,{uid:DB.uid,d:full.d}),40000,"TIMEOUT"); imgDone=true; bar.style.width="85%";
       await withTimeout(DB.set(`ex/${c}/works/${wid}`,{uid:DB.uid,name:name.slice(0,30),cat,desc:desc.slice(0,300),src:src.slice(0,150),nick:ST.me.nick.slice(0,16),th:th.d,w:th.w,h:th.h,t:DB.TS}),20000,"TIMEOUT");
       bar.style.width="100%";
+      try{ localStorage.setItem(`gal-hung-${ST.code}`,"1"); }catch(e){}
       closeModal(); toast(`'${name}' 작품을 전시관에 걸었어요! 🎉`,3500); World.emote("👏");
       setTimeout(()=>World.goToWork(wid),900);
     }catch(e){
@@ -714,21 +804,26 @@ const Upload={
    3D 세계 (three.js)
    ============================================================ */
 const World=(()=>{
-  const FLOOR=0.45, CEIL=4.4, HW=7, T=0.3, DOOR=1.3, DOORH=2.8, SP=2.4;
+  /* 층 높이 · 건물 크기 (단위 m) */
+  const FL={"-1":-4.0,"0":0.45,"1":5.0}, CEIL={"-1":0.1,"0":4.65,"1":9.2};
+  const BX=14, BZ=24, T=0.3, DOOR=1.3, DOORH=2.9;
+  const UP={x0:-6.5,x1:-4.5,z0:-7.5,z1:-1.5}, DN={x0:4.5,x1:6.5,z0:-7.5,z1:-1.5}, ATR={x0:-3.2,x1:3.2,z0:-8,z1:-1.5};
+  const HC={x:0,z:-4.75,r:1.9};
+  const BOOTH={x:7.2,z:5.4};
   let R,scene,cam,clock,running=false,inited=false,raf=0;
-  let staticG,hallG,framesG,othersG,meAv=null;
-  let colliders=[], hallColliders=[], camBlock=[], pickables=[], floorMeshes=[];
-  let L=16, layout={slots:[],part:false}, frameById={}, texCache={};
-  const me={x:0,z:22,y:0,rot:Math.PI,moving:false,speed:0};
+  let outG,othersG,meAv=null; const G={}; const FG={};
+  let C={"-1":[],"0":[],"1":[]}, camBlock=[], pickables=[], floorMeshes=[];
+  let frameById={}, texCache={}, gateMesh=null, gateOpen=false, slideMesh=null, roomSigns=[];
+  const me={x:0,z:22,y:0,lv:0,rot:Math.PI,moving:false};
   let yaw=0, pitch=0.32, dist=5.2, fp=false, fov=60;
-  const keys={}; let jx=0,jy=0, walkTo=null, inputPaused=false;
+  const keys={}; let jx=0,jy=0, walkTo=null, inputPaused=false, ride=null;
   const others={};
   let lastSend=0,lastSent=null,lastBeat=0, myEmo={e:"",et:0};
-  let exMeta=null, bannerTex=null, signTex=null;
+  let exMeta=null, bannerTex=null, signTex=null, planets=[], solarG=null;
 
   const MC={}; function M(c,o){ const k=c+(o?JSON.stringify(o):""); if(!MC[k]) MC[k]=new THREE.MeshLambertMaterial(Object.assign({color:c},o||{})); return MC[k]; }
   function flat(g){ const n=g.index?g.toNonIndexed():g; n.computeVertexNormals(); return n; }
-  function box(w,h,d,c,x,y,z,parent){ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M(c)); m.position.set(x,y,z); (parent||staticG).add(m); return m; }
+  function box(w,h,d,c,x,y,z,parent){ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M(c)); m.position.set(x,y,z); (parent||outG).add(m); return m; }
   function addCol(arr,minX,maxX,minZ,maxZ){ arr.push([minX,maxX,minZ,maxZ]); }
 
   function canvasTex(w,h,draw){ const c=document.createElement("canvas"); c.width=w; c.height=h; const x=c.getContext("2d"); draw(x,w,h); const t=new THREE.CanvasTexture(c); t.anisotropy=4; return t; }
@@ -768,57 +863,94 @@ const World=(()=>{
     if(u.bubble){ u.bubbleT-=dt; u.bubble.position.y=2.55+Math.sin((2.6-u.bubbleT)*6)*0.05; if(u.bubbleT<=0){ av.remove(u.bubble); u.bubble.material.map.dispose(); u.bubble.material.dispose(); u.bubble=null; } }
   }
 
+
+  /* ---- 위치 판정 ---- */
+  const inR=(r,x,z,m=0)=>x>r.x0-m&&x<r.x1+m&&z>r.z0-m&&z<r.z1+m;
+  const inside=(x,z)=>Math.abs(x)<BX&&z<0&&z>-BZ;
+  function stairY(r,z,up){ const t=Math.max(0,Math.min(1,(r.z1-z)/(r.z1-r.z0))); return up?FL[0]+t*(FL[1]-FL[0]):FL[0]-t*(FL[0]-FL[-1]); }
+  function heightAt(x,z,lv){
+    if(inR(UP,x,z)&&(lv===0||lv===1)) return stairY(UP,z,true);
+    if(inR(DN,x,z)&&(lv===0||lv===-1)) return stairY(DN,z,false);
+    if(inside(x,z)) return FL[lv];
+    if(z<1.8&&z>=0&&Math.abs(x)<6.7) return FL[0];
+    if(Math.abs(x)<5){ if(z>=1.8&&z<2.2) return 0.3; if(z>=2.2&&z<2.6) return 0.15; }
+    return 0;
+  }
+  function levelAt(x,z,lv){
+    if(inR(UP,x,z)&&(lv===0||lv===1)) return stairY(UP,z,true)>2.7?1:0;
+    if(inR(DN,x,z)&&(lv===0||lv===-1)) return stairY(DN,z,false)<-1.8?-1:0;
+    return lv;
+  }
+  function zoneName(x,z,lv){
+    if(!inside(x,z)) return "전시관 앞";
+    if(lv===-1) return "지하 1층 · 태양계 모형관";
+    const f=lv===1?"2층":"1층";
+    if(z>-9&&Math.abs(x)<7) return f+(lv===1?" 로비 · 미끄럼틀":" 로비");
+    if(z>-9) return f+" 전시실 "+(x<0?"C":"D");
+    if(z>-12.5) return f+" 복도";
+    return f+" 전시실 "+(x<0?"A":"B");
+  }
+
   /* ---- 바깥 풍경 ---- */
-  function buildStatic(){
-    staticG=new THREE.Group(); scene.add(staticG); colliders=[];
-    const ground=new THREE.Mesh(new THREE.PlaneGeometry(200,200),M("#bfe8a8")); ground.rotation.x=-Math.PI/2; ground.userData.floor=true; staticG.add(ground); floorMeshes.push(ground);
-    // 잔디 무늬
-    for(let i=0;i<40;i++){ const p=new THREE.Mesh(new THREE.CircleGeometry(1.5+Math.random()*2.5,7),M("#b0df98")); p.rotation.x=-Math.PI/2; const a=Math.random()*Math.PI*2, r=14+Math.random()*30; p.position.set(Math.cos(a)*r,0.005,10+Math.sin(a)*r); if(Math.abs(p.position.x)<4&&p.position.z>0) continue; staticG.add(p); }
-    // 길(포석)
-    const path=new THREE.Mesh(new THREE.PlaneGeometry(7,30),M("#efe8dc")); path.rotation.x=-Math.PI/2; path.position.set(0,0.01,17.6); staticG.add(path);
-    const plaza=new THREE.Mesh(new THREE.PlaneGeometry(17,5),M("#efe8dc")); plaza.rotation.x=-Math.PI/2; plaza.position.set(0,0.011,4.2); staticG.add(plaza);
-    for(let z=3;z<33;z+=1.2){ const ln=new THREE.Mesh(new THREE.PlaneGeometry(7,0.05),M("#ddd3c4")); ln.rotation.x=-Math.PI/2; ln.position.set(0,0.015,z); staticG.add(ln); }
-    // 계단과 기단
-    box(13.4,FLOOR,1.8,"#f4efe6",0,FLOOR/2,0.9);
-    box(10,0.30,0.4,"#f1ebe1",0,0.15,2.0); box(10,0.15,0.4,"#ede6da",0,0.075,2.4);
-    // 기둥
+  function ground(){
+    const mk=(w,d,x,z)=>{ const g=new THREE.Mesh(new THREE.PlaneGeometry(w,d),M("#bfe8a8")); g.rotation.x=-Math.PI/2; g.position.set(x,0,z); g.userData.floor=true; g.userData.lv=0; outG.add(g); floorMeshes.push(g); };
+    mk(200,100,0,50); mk(200,76,0,-BZ-38); mk(86,BZ,-BX-43,-BZ/2); mk(86,BZ,BX+43,-BZ/2);
+  }
+  function buildOutdoor(){
+    outG=new THREE.Group(); scene.add(outG);
+    ground();
+    for(let i=0;i<40;i++){ const p=new THREE.Mesh(new THREE.CircleGeometry(1.5+Math.random()*2.5,7),M("#b0df98")); p.rotation.x=-Math.PI/2; const a=Math.random()*Math.PI*2, r=18+Math.random()*30; p.position.set(Math.cos(a)*r,0.005,12+Math.sin(a)*r); if(Math.abs(p.position.x)<16&&p.position.z<3) continue; if(Math.abs(p.position.x)<4) continue; outG.add(p); }
+    const path=new THREE.Mesh(new THREE.PlaneGeometry(7,30),M("#efe8dc")); path.rotation.x=-Math.PI/2; path.position.set(0,0.01,17.6); outG.add(path);
+    const plaza=new THREE.Mesh(new THREE.PlaneGeometry(24,5),M("#efe8dc")); plaza.rotation.x=-Math.PI/2; plaza.position.set(0,0.011,4.2); outG.add(plaza);
+    for(let z=3;z<33;z+=1.2){ const ln=new THREE.Mesh(new THREE.PlaneGeometry(7,0.05),M("#ddd3c4")); ln.rotation.x=-Math.PI/2; ln.position.set(0,0.015,z); outG.add(ln); }
+    box(13.4,FL[0],1.8,"#f4efe6",0,FL[0]/2,0.9,outG); box(10,0.30,0.4,"#f1ebe1",0,0.15,2.0,outG); box(10,0.15,0.4,"#ede6da",0,0.075,2.4,outG);
+    // 2층 높이의 큰 기둥
+    const CH=8.6;
     for(const x of [-5.3,-3.6,-1.9,1.9,3.6,5.3]){
-      const c=new THREE.Mesh(flat(new THREE.CylinderGeometry(0.3,0.34,3.9,14)),M("#fbf8f2")); c.position.set(x,FLOOR+1.95,1.2); staticG.add(c);
-      box(0.8,0.18,0.8,"#f1ebe1",x,FLOOR+0.09,1.2); box(0.8,0.16,0.8,"#f1ebe1",x,FLOOR+3.92,1.2);
-      addCol(colliders,x-0.4,x+0.4,0.8,1.6);
+      const c=new THREE.Mesh(flat(new THREE.CylinderGeometry(0.34,0.38,CH,14)),M("#fbf8f2")); c.position.set(x,FL[0]+CH/2,1.2); outG.add(c);
+      box(0.9,0.2,0.9,"#f1ebe1",x,FL[0]+0.1,1.2,outG); box(0.9,0.18,0.9,"#f1ebe1",x,FL[0]+CH-0.09,1.2,outG);
+      C[0].push([x-0.42,x+0.42,0.78,1.62]);
     }
-    // 처마 + 박공
-    box(13.4,0.55,1.7,"#f3ece1",0,FLOOR+4.27,0.75);
-    const sh=new THREE.Shape(); sh.moveTo(-6.9,0); sh.lineTo(6.9,0); sh.lineTo(0,1.5); sh.lineTo(-6.9,0);
-    const ped=new THREE.Mesh(flat(new THREE.ExtrudeGeometry(sh,{depth:1.7,bevelEnabled:false})),M("#f6f0e6")); ped.position.set(0,FLOOR+4.54,-0.1); staticG.add(ped);
-    // 간판
-    signTex=canvasTex(1024,128,()=>{}); const sign=new THREE.Mesh(new THREE.PlaneGeometry(6,0.42),new THREE.MeshBasicMaterial({map:signTex,transparent:true})); sign.position.set(0,FLOOR+4.27,1.61); staticG.add(sign);
-    // 문
-    const dM=M("#1f6f5f"); const d1=new THREE.Mesh(new THREE.BoxGeometry(1.25,DOORH,0.08),dM); d1.geometry.translate(0.625,0,0); d1.position.set(-DOOR,FLOOR+DOORH/2,-0.15); d1.rotation.y=1.45; addCol(colliders,-DOOR-0.2,-DOOR+0.25,-1.45,-0.1); staticG.add(d1);
-    const d2=new THREE.Mesh(new THREE.BoxGeometry(1.25,DOORH,0.08),dM); d2.geometry.translate(-0.625,0,0); d2.position.set(DOOR,FLOOR+DOORH/2,-0.15); d2.rotation.y=-1.45; addCol(colliders,DOOR-0.25,DOOR+0.2,-1.45,-0.1); staticG.add(d2);
-    const arch=new THREE.Mesh(new THREE.CircleGeometry(DOOR,24,0,Math.PI),new THREE.MeshBasicMaterial({color:"#ffe2a8"})); arch.position.set(0,FLOOR+DOORH+0.02,0.02); arch.scale.y=0.55; staticG.add(arch);
-    // 장식 창문
-    for(const x of [-4.5,4.5]){ box(1.9,2.3,0.06,"#e7dccb",x,FLOOR+1.75,0.03); const w=new THREE.Mesh(new THREE.PlaneGeometry(1.6,2.0),new THREE.MeshBasicMaterial({color:"#ffe9b8"})); w.position.set(x,FLOOR+1.75,0.07); staticG.add(w); box(0.06,2.0,0.04,"#c9bba5",x,FLOOR+1.75,0.09); box(1.6,0.06,0.04,"#c9bba5",x,FLOOR+1.95,0.09); }
-    // 배너 거치대
+    const top=FL[0]+CH;
+    box(13.6,0.6,1.8,"#f3ece1",0,top+0.3,0.75,outG);
+    const sh=new THREE.Shape(); sh.moveTo(-7,0); sh.lineTo(7,0); sh.lineTo(0,1.8); sh.lineTo(-7,0);
+    const ped=new THREE.Mesh(flat(new THREE.ExtrudeGeometry(sh,{depth:1.8,bevelEnabled:false})),M("#f6f0e6")); ped.position.set(0,top+0.6,-0.15); outG.add(ped);
+    signTex=canvasTex(1024,128,()=>{}); const sign=new THREE.Mesh(new THREE.PlaneGeometry(6.4,0.48),new THREE.MeshBasicMaterial({map:signTex,transparent:true})); sign.position.set(0,top+0.3,1.66); outG.add(sign);
+    // 정문 위 반원 창
+    const arch=new THREE.Mesh(new THREE.CircleGeometry(DOOR,24,0,Math.PI),new THREE.MeshBasicMaterial({color:"#ffe2a8"})); arch.position.set(0,FL[0]+DOORH+0.02,0.02); arch.scale.y=0.55; outG.add(arch);
+    // 창문 (1층·2층)
+    const win=(x,y)=>{ box(1.9,2.3,0.06,"#e7dccb",x,y,0.03,outG); const w=new THREE.Mesh(new THREE.PlaneGeometry(1.6,2.0),new THREE.MeshBasicMaterial({color:"#ffe9b8"})); w.position.set(x,y,0.07); outG.add(w); box(0.06,2.0,0.04,"#c9bba5",x,y,0.09,outG); box(1.6,0.06,0.04,"#c9bba5",x,y+0.2,0.09,outG); };
+    for(const x of [-4.5,4.5,-9,-12,9,12]) win(x,FL[0]+1.9);
+    for(const x of [-4.5,0,4.5,-9,-12,9,12]) win(x,FL[1]+2.0);
+    const swin=(x,z,y,s)=>{ const w=new THREE.Mesh(new THREE.PlaneGeometry(1.6,2.0),new THREE.MeshBasicMaterial({color:"#ffe9b8"})); w.position.set(x,y,z); w.rotation.y=s*Math.PI/2; outG.add(w); };
+    for(const z of [-4,-11,-18]){ swin(BX+0.02,z,FL[0]+1.9,1); swin(-BX-0.02,z,FL[0]+1.9,-1); swin(BX+0.02,z,FL[1]+2,1); swin(-BX-0.02,z,FL[1]+2,-1); }
+    // 배너
     bannerTex=canvasTex(512,1024,()=>{});
     const bn=new THREE.Group(); const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,3.3,8),M("#8a8f99")); pole.position.y=1.65; bn.add(pole);
     const ft=new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.45,0.08,12),M("#8a8f99")); ft.position.y=0.04; bn.add(ft);
     const cloth=new THREE.Mesh(new THREE.PlaneGeometry(1.35,2.7),new THREE.MeshBasicMaterial({map:bannerTex,side:THREE.DoubleSide})); cloth.position.set(0,1.85,0.06); bn.add(cloth);
-    bn.position.set(-4.6,0,5.2); bn.rotation.y=0.35; staticG.add(bn); addCol(colliders,-5.1,-4.1,4.8,5.6);
-    // 나무 · 덤불 · 화분
-    const coneT=(x,z,s)=>{ const g=new THREE.Group(); const pot=new THREE.Mesh(flat(new THREE.CylinderGeometry(0.42*s,0.32*s,0.5*s,8)),M("#2f2f33")); pot.position.y=0.25*s; const c=new THREE.Mesh(flat(new THREE.ConeGeometry(0.8*s,2.6*s,7)),M(Math.random()<0.5?"#5cb85c":"#4fae55")); c.position.y=0.5*s+1.3*s; g.add(pot,c); g.position.set(x,0,z); staticG.add(g); addCol(colliders,x-0.45*s,x+0.45*s,z-0.45*s,z+0.45*s); };
-    const roundT=(x,z,s)=>{ const g=new THREE.Group(); const tr=new THREE.Mesh(flat(new THREE.CylinderGeometry(0.14*s,0.2*s,1.6*s,6)),M("#a0703f")); tr.position.y=0.8*s; const lf=new THREE.Mesh(flat(new THREE.IcosahedronGeometry(1.1*s,0)),M(["#6cc56c","#7ccf6a","#58b65e"][Math.floor(Math.random()*3)])); lf.position.y=2.2*s; lf.rotation.y=Math.random()*3; g.add(tr,lf); g.position.set(x,0,z); staticG.add(g); addCol(colliders,x-0.3*s,x+0.3*s,z-0.3*s,z+0.3*s); };
-    const bush=(x,z,s)=>{ const b=new THREE.Mesh(flat(new THREE.IcosahedronGeometry(0.55*s,0)),M(Math.random()<0.5?"#7fd07a":"#6cc56c")); b.position.set(x,0.4*s,z); b.rotation.y=Math.random()*3; staticG.add(b); };
-    [[-7.8,3.2],[7.8,3.2],[-4.4,9],[4.4,9],[-4.4,15],[4.4,15],[-4.4,21],[4.4,21]].forEach(([x,z])=>coneT(x,z,1));
-    [[-12,6],[12,7],[-14,14],[13,16],[-11,24],[12,26],[-18,4],[18,3],[-20,20],[19,22],[-9,32],[9,33],[-16,30],[16,31],[0,38],[-24,10],[24,12]].forEach(([x,z])=>roundT(x,z,0.9+Math.random()*0.5));
-    for(let x=-6.6;x<=6.6;x+=0.9){ if(Math.abs(x)<5.4) continue; bush(x,2.8,0.9); }
-    for(let i=0;i<14;i++){ bush(-9-Math.random()*2,-2-i*2.2,1+Math.random()*0.4); bush(9+Math.random()*2,-2-i*2.2,1+Math.random()*0.4); }
-    // 꽃
-    for(let i=0;i<60;i++){ const f=new THREE.Mesh(new THREE.SphereGeometry(0.07,6,4),M(["#ff8fb1","#ffd166","#ffffff","#c39bff"][i%4])); const s=i%2?1:-1; f.position.set(s*(4.2+Math.random()*1.2),0.12,4+Math.random()*26); staticG.add(f); }
-    // 가로등
-    for(const [x,z] of [[-3.9,12],[3.9,12],[-3.9,24],[3.9,24]]){ const p=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.08,2.6,8),M("#555a66")); p.position.set(x,1.3,z); const l=new THREE.Mesh(new THREE.SphereGeometry(0.2,10,8),new THREE.MeshBasicMaterial({color:"#fff4c2"})); l.position.set(x,2.7,z); staticG.add(p,l); addCol(colliders,x-0.15,x+0.15,z-0.15,z+0.15); }
-    // 하늘 장식: 구름
-    for(let i=0;i<10;i++){ const g=new THREE.Group(); for(let j=0;j<4;j++){ const c=new THREE.Mesh(flat(new THREE.IcosahedronGeometry(1.4+Math.random(),0)),new THREE.MeshLambertMaterial({color:"#ffffff",emissive:"#dfefff"})); c.position.set(j*1.6,Math.random()*0.6,Math.random()); g.add(c); } g.position.set(-60+Math.random()*120,18+Math.random()*10,-60+Math.random()*100); staticG.add(g); }
+    bn.position.set(-5.2,0,5.6); bn.rotation.y=0.35; outG.add(bn); C[0].push([-5.7,-4.7,5.2,6.0]);
+    // 매표소
+    const bt=new THREE.Group(); bt.position.set(BOOTH.x,0,BOOTH.z);
+    const bb=new THREE.Mesh(new THREE.BoxGeometry(2.4,2.5,2.0),M("#fff3e0")); bb.position.y=1.25; bt.add(bb);
+    const rf=new THREE.Mesh(new THREE.BoxGeometry(2.9,0.25,2.5),M("#e2574c")); rf.position.y=2.62; bt.add(rf);
+    const wn=new THREE.Mesh(new THREE.PlaneGeometry(1.4,0.9),new THREE.MeshBasicMaterial({color:"#9fd3ff"})); wn.position.set(-1.21,1.45,0); wn.rotation.y=-Math.PI/2; bt.add(wn);
+    const cnt=new THREE.Mesh(new THREE.BoxGeometry(0.4,0.1,1.6),M("#c9a27a")); cnt.position.set(-1.35,1.0,0); bt.add(cnt);
+    const stx=canvasTex(512,160,(x,w,h)=>{ x.fillStyle="#e2574c"; rrect(x,4,4,w-8,h-8,24); x.fill(); x.fillStyle="#fff"; x.textAlign="center"; x.textBaseline="middle"; x.font=`900 80px ${FONT}`; x.fillText("🎫 매표소",w/2,h/2+4); });
+    const sg=new THREE.Mesh(new THREE.PlaneGeometry(1.8,0.56),new THREE.MeshBasicMaterial({map:stx,transparent:true})); sg.position.set(-1.46,3.05,0); sg.rotation.y=-Math.PI/2; bt.add(sg);
+    const sg2=sg.clone(); sg2.position.set(0,3.05,1.26); sg2.rotation.y=0; bt.add(sg2);
+    bb.userData.booth=true; outG.add(bt); pickables.push(bb); C[0].push([BOOTH.x-1.3,BOOTH.x+1.3,BOOTH.z-1.1,BOOTH.z+1.1]);
+    // 나무 · 덤불
+    const coneT=(x,z,s)=>{ const g=new THREE.Group(); const pot=new THREE.Mesh(flat(new THREE.CylinderGeometry(0.42*s,0.32*s,0.5*s,8)),M("#2f2f33")); pot.position.y=0.25*s; const c=new THREE.Mesh(flat(new THREE.ConeGeometry(0.8*s,2.6*s,7)),M(Math.random()<0.5?"#5cb85c":"#4fae55")); c.position.y=0.5*s+1.3*s; g.add(pot,c); g.position.set(x,0,z); outG.add(g); C[0].push([x-0.45*s,x+0.45*s,z-0.45*s,z+0.45*s]); };
+    const roundT=(x,z,s)=>{ const g=new THREE.Group(); const tr=new THREE.Mesh(flat(new THREE.CylinderGeometry(0.14*s,0.2*s,1.6*s,6)),M("#a0703f")); tr.position.y=0.8*s; const lf=new THREE.Mesh(flat(new THREE.IcosahedronGeometry(1.1*s,0)),M(["#6cc56c","#7ccf6a","#58b65e"][Math.floor(Math.random()*3)])); lf.position.y=2.2*s; lf.rotation.y=Math.random()*3; g.add(tr,lf); g.position.set(x,0,z); outG.add(g); C[0].push([x-0.3*s,x+0.3*s,z-0.3*s,z+0.3*s]); };
+    const bush=(x,z,s)=>{ const b=new THREE.Mesh(flat(new THREE.IcosahedronGeometry(0.55*s,0)),M(Math.random()<0.5?"#7fd07a":"#6cc56c")); b.position.set(x,0.4*s,z); b.rotation.y=Math.random()*3; outG.add(b); };
+    [[-4.4,9],[4.4,9],[-4.4,15],[4.4,15],[-4.4,21],[4.4,21],[-15.5,2.5],[15.5,2.5]].forEach(([x,z])=>coneT(x,z,1));
+    [[-12,9],[12,10],[-14,15],[13,17],[-11,24],[12,26],[-20,4],[20,3],[-21,20],[20,22],[-9,32],[9,33],[-16,30],[16,31],[0,38],[-24,10],[24,12],[-19,-10],[19,-12],[-20,-22],[20,-24],[-8,-30],[8,-31]].forEach(([x,z])=>roundT(x,z,0.9+Math.random()*0.5));
+    for(let x=-13.4;x<=13.4;x+=0.9){ if(Math.abs(x)<7.2) continue; if(x>4.5&&x<10) continue; bush(x,0.9,0.9); }
+    for(let i=0;i<12;i++){ bush(-15.2-Math.random()*1.5,-1-i*2,1+Math.random()*0.4); bush(15.2+Math.random()*1.5,-1-i*2,1+Math.random()*0.4); }
+    for(let i=0;i<60;i++){ const f=new THREE.Mesh(new THREE.SphereGeometry(0.07,6,4),M(["#ff8fb1","#ffd166","#ffffff","#c39bff"][i%4])); const s=i%2?1:-1; f.position.set(s*(4.2+Math.random()*1.2),0.12,7+Math.random()*24); outG.add(f); }
+    for(const [x,z] of [[-3.9,12],[3.9,12],[-3.9,24],[3.9,24]]){ const p=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.08,2.6,8),M("#555a66")); p.position.set(x,1.3,z); const l=new THREE.Mesh(new THREE.SphereGeometry(0.2,10,8),new THREE.MeshBasicMaterial({color:"#fff4c2"})); l.position.set(x,2.7,z); outG.add(p,l); C[0].push([x-0.15,x+0.15,z-0.15,z+0.15]); }
+    for(let i=0;i<10;i++){ const g=new THREE.Group(); for(let j=0;j<4;j++){ const c=new THREE.Mesh(flat(new THREE.IcosahedronGeometry(1.4+Math.random(),0)),new THREE.MeshLambertMaterial({color:"#ffffff",emissive:"#dfefff"})); c.position.set(j*1.6,Math.random()*0.6,Math.random()); g.add(c); } g.position.set(-60+Math.random()*120,20+Math.random()*10,-70+Math.random()*110); outG.add(g); }
   }
   function drawBanner(){
     if(!bannerTex||!exMeta) return; const c=bannerTex.image, x=c.getContext("2d"); const w=c.width,h=c.height;
@@ -827,7 +959,6 @@ const World=(()=>{
     x.textAlign="center"; x.fillStyle="#ffd166"; fitText(x,exMeta.cls||"우리 반",440,64,900); x.fillText(exMeta.cls||"우리 반",w/2,150);
     x.fillStyle="#fff"; const t=exMeta.title||"태양계 천체 사진전"; const parts=t.length>9?[t.slice(0,Math.ceil(t.length/2)),t.slice(Math.ceil(t.length/2))]:[t];
     parts.forEach((p,i)=>{ fitText(x,p,450,78,900); x.fillText(p,w/2,300+i*96); });
-    // 행성 그림
     const cx=w/2, cy=700; const pg=x.createRadialGradient(cx-30,cy-30,10,cx,cy,110); pg.addColorStop(0,"#ffe6a6"); pg.addColorStop(1,"#d99a3d"); x.fillStyle=pg; x.beginPath(); x.arc(cx,cy,100,0,Math.PI*2); x.fill();
     x.strokeStyle="#f6d7a0"; x.lineWidth=14; x.beginPath(); x.ellipse(cx,cy,190,46,-0.25,0,Math.PI*2); x.stroke();
     x.fillStyle="#ffffffcc"; fitText(x,"우리 반 3D 우주 전시관",440,40,700); x.fillText("우리 반 3D 우주 전시관",w/2,940);
@@ -835,58 +966,163 @@ const World=(()=>{
     const s=signTex.image, y=s.getContext("2d"); y.clearRect(0,0,s.width,s.height); y.fillStyle="#7a5c3a"; y.textAlign="center"; y.textBaseline="middle"; fitText(y,"우 주 전 시 관",900,84,900); y.fillText("우 주 전 시 관",512,66); signTex.needsUpdate=true;
   }
 
-  /* ---- 전시관 건물 (작품 수에 따라 길이가 바뀜) ---- */
-  function genSlots(len,part){
-    const s=[]; const wallIn=HW-T; const side=[], mid=[];
-    for(let z=-2.4; z>=-len+1.8-1e-6; z-=SP) side.push(z);
-    side.forEach(z=>s.push({x:-wallIn,z,ry:Math.PI/2}));                                // 왼쪽 벽 (앞→뒤)
-    for(let x=-4.8; x<=4.81; x+=SP) s.push({x,z:-len+T,ry:0});                         // 안쪽 벽
-    side.slice().reverse().forEach(z=>s.push({x:wallIn,z,ry:-Math.PI/2}));              // 오른쪽 벽 (뒤→앞)
-    if(part){ for(let z=-6.6; z>=-len+4-1e-6; z-=SP) mid.push(z);
-      mid.forEach(z=>s.push({x:0.16,z,ry:Math.PI/2})); mid.slice().reverse().forEach(z=>s.push({x:-0.16,z,ry:-Math.PI/2})); }
-    s.push({x:-4.2,z:-T,ry:Math.PI},{x:4.2,z:-T,ry:Math.PI});                          // 입구 안쪽 벽
-    return s;
+  /* ---- 건물 ---- */
+  function slab(y0,y1,holes,color,lv,g,isFloor,ceilColor){
+    // 직사각형 바닥판에서 구멍을 뺀 조각들
+    const xs=new Set([-BX,BX]); holes.forEach(h=>{ xs.add(h.x0); xs.add(h.x1); }); const X=[...xs].sort((a,b)=>a-b);
+    for(let i=0;i<X.length-1;i++){
+      const a=X[i], b=X[i+1], mid=(a+b)/2; let zs=[[0,-BZ]];
+      holes.filter(h=>mid>h.x0&&mid<h.x1).forEach(h=>{ const n=[]; zs.forEach(([t,u])=>{ if(h.z1<=u||h.z0>=t){ n.push([t,u]); return; } if(t>h.z1) n.push([t,h.z1]); if(h.z0>u) n.push([h.z0,u]); }); zs=n; });
+      zs.forEach(([t,u])=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(b-a,y1-y0,t-u),ceilColor?[M(color),M(color),M(color),M(ceilColor),M(color),M(color)]:M(color)); m.position.set(mid,(y0+y1)/2,(t+u)/2); g.add(m); camBlock.push(m); m.userData.block=true; if(isFloor){ m.userData.floor=true; m.userData.lv=lv; floorMeshes.push(m); } });
+    }
   }
-  function computeLayout(n){
-    for(let len=16; len<=26.01; len+=SP){ const s=genSlots(len,false); if(s.length>=n) return {L:len,part:false,slots:s}; }
-    for(let len=21.6; len<=200; len+=SP){ const s=genSlots(len,true); if(s.length>=n) return {L:len,part:true,slots:s}; }
-    return {L:200,part:true,slots:genSlots(200,true)};
+  function wallBox(g,lv,x0,x1,z0,z1,y0,y1,c,col=true){
+    const m=new THREE.Mesh(new THREE.BoxGeometry(x1-x0,y1-y0,z1-z0),M(c,{emissive:lv===-1?"#1b2040":"#4d483e"})); m.position.set((x0+x1)/2,(y0+y1)/2,(z0+z1)/2); g.add(m); camBlock.push(m); m.userData.block=true;
+    if(col) C[lv].push([x0,x1,z0,z1]); return m;
   }
-  function disposeGroup(g){ g.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material&&o.userData.ownMat){ if(o.material.map&&o.userData.ownMap) o.material.map.dispose(); o.material.dispose(); } }); }
-  function buildHall(){
-    if(hallG){ scene.remove(hallG); disposeGroup(hallG); }
-    hallG=new THREE.Group(); scene.add(hallG); hallColliders=[]; camBlock=[]; floorMeshes=floorMeshes.filter(m=>!m.userData.hall);
-    const H=FLOOR+CEIL, wc="#f7f1e6", oc="#f3ece1";
-    const fl=new THREE.Mesh(new THREE.BoxGeometry(HW*2,FLOOR,L),M("#d9b48a",{emissive:"#3d2c1a"})); fl.position.set(0,FLOOR/2,-L/2); hallG.add(fl); fl.userData.floor=true; fl.userData.hall=true; floorMeshes.push(fl);
-    for(let z=-1.2; z>-L; z-=1.2){ box(HW*2-0.6,0.005,0.03,"#c79f74",0,FLOOR+0.003,z,hallG); }
-    const wall=(w,h,d,x,y,z,c)=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),M(c||wc,{emissive:"#4d483e"})); m.position.set(x,y,z); hallG.add(m); camBlock.push(m); m.userData.block=true; return m; };
-    wall(T,H,L,-HW+T/2,H/2,-L/2,oc); addCol(hallColliders,-HW,-HW+T,-L,0);
-    wall(T,H,L,HW-T/2,H/2,-L/2,oc); addCol(hallColliders,HW-T,HW,-L,0);
-    wall(HW*2,H,T,0,H/2,-L+T/2,oc); addCol(hallColliders,-HW,HW,-L,-L+T);
-    const sw=HW-DOOR; wall(sw,H,T,-(DOOR+sw/2),H/2,-T/2,oc); wall(sw,H,T,(DOOR+sw/2),H/2,-T/2,oc);
-    addCol(hallColliders,-HW,-DOOR,-T,0); addCol(hallColliders,DOOR,HW,-T,0);
-    wall(DOOR*2,H-(FLOOR+DOORH),T,0,FLOOR+DOORH+(H-FLOOR-DOORH)/2,-T/2,oc);
-    // 지붕과 별 천장
-    const roof=box(HW*2+0.6,0.35,L+0.6,"#e8dfd0",0,H+0.175,-L/2+0.0,hallG); camBlock.push(roof); roof.userData.block=true;
-    box(HW*2+0.8,0.12,L+0.8,"#d9cdb9",0,H+0.4,-L/2,hallG);
-    const starTex=canvasTex(512,512,(x,w,h)=>{ x.fillStyle="#1c2550"; x.fillRect(0,0,w,h); for(let i=0;i<260;i++){ x.globalAlpha=0.3+Math.random()*0.7; x.fillStyle=Math.random()<0.15?"#ffe7a3":"#ffffff"; const r=Math.random()*1.8+0.4; x.beginPath(); x.arc(Math.random()*w,Math.random()*h,r,0,Math.PI*2); x.fill(); } });
-    starTex.wrapS=starTex.wrapT=THREE.RepeatWrapping; starTex.repeat.set(2,L/7);
-    const ceil=new THREE.Mesh(new THREE.PlaneGeometry(HW*2-T*2,L-T*2),new THREE.MeshBasicMaterial({map:starTex})); ceil.userData.ownMat=true; ceil.userData.ownMap=true; ceil.rotation.x=Math.PI/2; ceil.position.set(0,H-0.01,-L/2); hallG.add(ceil);
-    // 벽 아래 몰딩 · 조명줄
-    box(0.06,0.18,L-0.6,"#e0d2bc",-HW+T+0.03,FLOOR+0.09,-L/2,hallG); box(0.06,0.18,L-0.6,"#e0d2bc",HW-T-0.03,FLOOR+0.09,-L/2,hallG);
-    // 칸막이
-    if(layout.part){ const a=-5.4, b=-L+2.8; const len=a-b; wall(0.3,3.3,len,0,FLOOR+1.65,(a+b)/2,"#efe6d6"); addCol(hallColliders,-0.15,0.15,b,a); box(0.4,0.12,len+0.1,"#e0d2bc",0,FLOOR+3.36,(a+b)/2,hallG); }
-    else { for(let z=-9; z>-L+5; z-=7){ box(2.2,0.42,0.7,"#b08060",0,FLOOR+0.21,z,hallG); addCol(hallColliders,-1.1,1.1,z-0.35,z+0.35); } }
-    // 로비: 둥근 러그, 소파, 토성 모형, 화분
-    const rug=new THREE.Mesh(new THREE.CircleGeometry(2.1,28),M("#f4a582")); rug.rotation.x=-Math.PI/2; rug.position.set(0,FLOOR+0.01,-3.2); hallG.add(rug);
-    const rug2=new THREE.Mesh(new THREE.RingGeometry(1.5,1.7,28),M("#fbd3bd")); rug2.rotation.x=-Math.PI/2; rug2.position.set(0,FLOOR+0.015,-3.2); hallG.add(rug2);
-    const sofa=(x,z,ry)=>{ const g=new THREE.Group(); const c="#5fb3a6"; const s1=new THREE.Mesh(new THREE.BoxGeometry(1.7,0.4,0.75),M(c)); s1.position.y=0.3; const s2=new THREE.Mesh(new THREE.BoxGeometry(1.7,0.6,0.2),M(c)); s2.position.set(0,0.6,-0.3); const r1=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.55,0.75),M("#4a998d")); r1.position.set(-0.85,0.37,0); const r2=r1.clone(); r2.position.x=0.85; g.add(s1,s2,r1,r2); g.position.set(x,FLOOR,z); g.rotation.y=ry; hallG.add(g); addCol(hallColliders,x-0.5,x+0.5,z-0.95,z+0.95); };
-    sofa(-3.6,-3.2,Math.PI/2); sofa(3.6,-3.2,-Math.PI/2);
-    const pot=(x,z)=>{ const p=new THREE.Mesh(flat(new THREE.CylinderGeometry(0.3,0.24,0.5,8)),M("#ffffff")); p.position.set(x,FLOOR+0.25,z); const t=new THREE.Mesh(flat(new THREE.IcosahedronGeometry(0.5,0)),M("#5cb85c")); t.position.set(x,FLOOR+1.0,z); const t2=new THREE.Mesh(flat(new THREE.IcosahedronGeometry(0.36,0)),M("#7ccf6a")); t2.position.set(x+0.15,FLOOR+1.45,z); hallG.add(p,t,t2); addCol(hallColliders,x-0.35,x+0.35,z-0.35,z+0.35); };
-    pot(-6.2,-0.9); pot(6.2,-0.9); pot(-6.2,-L+0.9); pot(6.2,-L+0.9);
-    const sat=new THREE.Group(); const sp=new THREE.Mesh(new THREE.SphereGeometry(0.62,20,14),M("#e9c27d")); const ring=new THREE.Mesh(new THREE.RingGeometry(0.85,1.25,40),new THREE.MeshLambertMaterial({color:"#f3dfb2",side:THREE.DoubleSide})); ring.userData.ownMat=true; ring.rotation.x=Math.PI/2.4; sat.add(sp,ring); sat.position.set(0,FLOOR+3.2,-3.2); hallG.add(sat); hallG.userData.sat=sat;
-    const wire=new THREE.Mesh(new THREE.CylinderGeometry(0.01,0.01,1.2,4),M("#999")); wire.position.set(0,H-0.6,-3.2); hallG.add(wire);
-    framesG=new THREE.Group(); hallG.add(framesG);
+  function rail(g,lv,x0,x1,z0,z1){
+    const y=FL[lv]; const m=new THREE.Mesh(new THREE.BoxGeometry(Math.max(0.06,x1-x0),1.0,Math.max(0.06,z1-z0)),new THREE.MeshLambertMaterial({color:"#cfe9ff",transparent:true,opacity:0.45})); m.userData.ownMat=true; m.position.set((x0+x1)/2,y+0.5,(z0+z1)/2); g.add(m);
+    const h=new THREE.Mesh(new THREE.BoxGeometry(Math.max(0.1,x1-x0+0.04),0.06,Math.max(0.1,z1-z0+0.04)),M("#8a6a4a")); h.position.set((x0+x1)/2,y+1.02,(z0+z1)/2); g.add(h);
+    C[lv].push([x0,x1,z0,z1]);
+  }
+  function stairs(g,r,up){
+    const n=14, d=(r.z1-r.z0)/n, w=r.x1-r.x0, cx=(r.x0+r.x1)/2;
+    for(let i=0;i<n;i++){
+      const z=r.z1-(i+0.5)*d;
+      const top=up?FL[0]+(i+1)*(FL[1]-FL[0])/n:FL[0]-(i)*(FL[0]-FL[-1])/n;
+      const bot=up?FL[0]:FL[-1];
+      const m=new THREE.Mesh(new THREE.BoxGeometry(w,top-bot,d),M(i%2?"#efe6d6":"#e6dccb")); m.position.set(cx,(top+bot)/2,z); g.add(m);
+      if(!up){ m.userData.floor=true; m.userData.lv=0; floorMeshes.push(m); }
+      else { m.userData.floor=true; m.userData.lv=0; floorMeshes.push(m); }
+    }
+  }
+  function floorWalls(lv,g){
+    const y0=lv===-1?FL[-1]-0.0:lv===0?0.1:FL[1]-0.35, y1=CEIL[lv], ext="#f3ece1", inn="#f7f1e6";
+    const e=lv===-1?"#26305e":ext, i=lv===-1?"#2c3770":inn;
+    // 바깥벽
+    wallBox(g,lv,-BX,-BX+T,-BZ,0,y0,y1,e); wallBox(g,lv,BX-T,BX,-BZ,0,y0,y1,e); wallBox(g,lv,-BX,BX,-BZ,-BZ+T,y0,y1,e);
+    if(lv===0){ wallBox(g,lv,-BX,-DOOR,-T,0,y0,y1,e); wallBox(g,lv,DOOR,BX,-T,0,y0,y1,e); wallBox(g,lv,-DOOR,DOOR,-T,0,FL[0]+DOORH,y1,e,false); }
+    else wallBox(g,lv,-BX,BX,-T,0,y0,y1,e);
+    if(lv===-1) return;
+    // 로비 옆벽(날개 전시실과 구분)
+    wallBox(g,lv,-7.15,-6.85,-9,-T,y0,y1,i); wallBox(g,lv,6.85,7.15,-9,-T,y0,y1,i);
+    // 날개 전시실 뒷벽 (문 있음)
+    wallBox(g,lv,-BX,-11.7,-9.15,-8.85,y0,y1,i); wallBox(g,lv,-9.3,-6.85,-9.15,-8.85,y0,y1,i);
+    wallBox(g,lv,6.85,9.3,-9.15,-8.85,y0,y1,i); wallBox(g,lv,11.7,BX,-9.15,-8.85,y0,y1,i);
+    // 안쪽 전시실 앞벽 (문 2개) + 가운데 칸막이
+    wallBox(g,lv,-BX,-8.2,-12.65,-12.35,y0,y1,i); wallBox(g,lv,-5.8,5.8,-12.65,-12.35,y0,y1,i); wallBox(g,lv,8.2,BX,-12.65,-12.35,y0,y1,i);
+    wallBox(g,lv,-0.15,0.15,-BZ,-12.5,y0,y1,i);
+    // 문 위 벽
+    const fl=FL[lv];
+    for(const [a,b] of [[-11.7,-9.3],[9.3,11.7]]) wallBox(g,lv,a,b,-9.15,-8.85,fl+DOORH,y1,i,false);
+    for(const [a,b] of [[-8.2,-5.8],[5.8,8.2]]) wallBox(g,lv,a,b,-12.65,-12.35,fl+DOORH,y1,i,false);
+    // 걸레받이
+    box(0.06,0.16,BZ-0.6,"#e0d2bc",-BX+T+0.03,fl+0.08,-BZ/2,g); box(0.06,0.16,BZ-0.6,"#e0d2bc",BX-T-0.03,fl+0.08,-BZ/2,g);
+  }
+  function roomSign(g,text,x,y,z,ry,w=2.4){
+    const tex=canvasTex(512,128,(c,W,H)=>{ c.fillStyle="#2b2f3a"; rrect(c,4,4,W-8,H-8,20); c.fill(); c.fillStyle="#fff"; c.textAlign="center"; c.textBaseline="middle"; fitText(c,text,470,52,900); c.fillText(text,W/2,H/2+3); });
+    const m=new THREE.Mesh(new THREE.PlaneGeometry(w,w/4),new THREE.MeshBasicMaterial({map:tex,transparent:true})); m.userData.ownMat=true; m.userData.ownMap=true; m.position.set(x,y,z); m.rotation.y=ry; g.add(m); return m;
+  }
+  function setSignText(m,text){ const c=m.material.map.image, x=c.getContext("2d"); x.clearRect(0,0,c.width,c.height); x.fillStyle="#2b2f3a"; rrect(x,4,4,c.width-8,c.height-8,20); x.fill(); x.fillStyle="#fff"; x.textAlign="center"; x.textBaseline="middle"; fitText(x,text,470,52,900); x.fillText(text,c.width/2,c.height/2+3); m.material.map.needsUpdate=true; }
+  function plant(g,lv,x,z){ const y=FL[lv]; const p=new THREE.Mesh(flat(new THREE.CylinderGeometry(0.3,0.24,0.5,8)),M("#ffffff")); p.position.set(x,y+0.25,z); const t=new THREE.Mesh(flat(new THREE.IcosahedronGeometry(0.5,0)),M("#5cb85c")); t.position.set(x,y+1.0,z); const t2=new THREE.Mesh(flat(new THREE.IcosahedronGeometry(0.36,0)),M("#7ccf6a")); t2.position.set(x+0.15,y+1.45,z); g.add(p,t,t2); C[lv].push([x-0.35,x+0.35,z-0.35,z+0.35]); }
+  function sofa(g,lv,x,z,ry){ const s=new THREE.Group(); const c="#5fb3a6"; const s1=new THREE.Mesh(new THREE.BoxGeometry(1.7,0.4,0.75),M(c)); s1.position.y=0.3; const s2=new THREE.Mesh(new THREE.BoxGeometry(1.7,0.6,0.2),M(c)); s2.position.set(0,0.6,-0.3); const r1=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.55,0.75),M("#4a998d")); r1.position.set(-0.85,0.37,0); const r2=r1.clone(); r2.position.x=0.85; s.add(s1,s2,r1,r2); s.position.set(x,FL[lv],z); s.rotation.y=ry; g.add(s); const hz=Math.abs(Math.sin(ry))>0.5; C[lv].push(hz?[x-0.45,x+0.45,z-0.9,z+0.9]:[x-0.9,x+0.9,z-0.45,z+0.45]); }
+  function helixPoint(s){
+    if(s<=1){ const th=4*Math.PI*s; return {x:HC.x+HC.r*Math.cos(th), z:HC.z+HC.r*Math.sin(th), y:FL[1]+0.25-(FL[1]-FL[0]+0.0)*s, tx:-Math.sin(th), tz:Math.cos(th), nx:Math.cos(th), nz:Math.sin(th)}; }
+    const k=(s-1)/0.2; return {x:HC.x+HC.r, z:HC.z+k*2.2, y:FL[0]+0.25-0.1*k, tx:0, tz:1, nx:1, nz:0};
+  }
+  function buildSlide(g){
+    const N=200, prof=[[-0.55,0.5],[-0.55,0],[0.55,0],[0.55,0.5]]; const pos=[]; const idx=[];
+    for(let i=0;i<=N;i++){ const p=helixPoint(i/N*1.2); prof.forEach(([a,b])=>pos.push(p.x+p.nx*a, p.y-0.05+b, p.z+p.nz*a)); }
+    for(let i=0;i<N;i++) for(let j=0;j<3;j++){ const a=i*4+j, b=a+1, c=a+4, d=a+5; idx.push(a,c,b, b,c,d); }
+    const geo=new THREE.BufferGeometry(); geo.setAttribute("position",new THREE.Float32BufferAttribute(pos,3)); geo.setIndex(idx); geo.computeVertexNormals();
+    slideMesh=new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:"#ffb020",side:THREE.DoubleSide,emissive:"#5a3300"})); slideMesh.userData.ownMat=true; g.add(slideMesh);
+    const col=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.3,FL[1]+1.2-FL[0],12),M("#ff8a65")); col.position.set(HC.x,(FL[0]+FL[1]+1.2)/2,HC.z); g.add(col);
+    // 2층 출발 다리
+    const br=new THREE.Mesh(new THREE.BoxGeometry(ATR.x1-(HC.x+HC.r)+0.3,0.12,1.2),M("#ffcc66")); br.position.set((ATR.x1+HC.x+HC.r)/2,FL[1]+0.2,HC.z); g.add(br);
+    C[0].push([-2.5,2.5,-7.5,-2.5]);
+  }
+  let frameGroups={};
+  function buildBuilding(){
+    [-1,0,1].forEach(lv=>{ G[lv]=new THREE.Group(); scene.add(G[lv]); FG[lv]=new THREE.Group(); G[lv].add(FG[lv]); });
+    const SG=new THREE.Group(); scene.add(SG);
+    // 바닥 · 천장 (항상 보임)
+    slab(FL[-1]-0.35,FL[-1],[],"#3a4270",-1,G[-1],true);
+    slab(0.1,FL[0],[DN],"#d9b48a",0,SG,true,"#efe8dc");
+    slab(FL[1]-0.35,FL[1],[UP,ATR],"#d9b48a",1,SG,true,"#f4eee4");
+    slab(CEIL[1],CEIL[1]+0.35,[],"#e8dfd0",1,SG,false);
+    box(BX*2+0.8,0.15,BZ+0.8,"#d9cdb9",0,CEIL[1]+0.42,-BZ/2,SG);
+    // 별 천장 (2층) · 지하 별 천장
+    const star=(lv,y,col)=>{ const t=canvasTex(512,512,(x,w,h)=>{ x.fillStyle=col; x.fillRect(0,0,w,h); for(let i=0;i<260;i++){ x.globalAlpha=0.3+Math.random()*0.7; x.fillStyle=Math.random()<0.15?"#ffe7a3":"#ffffff"; const r=Math.random()*1.8+0.4; x.beginPath(); x.arc(Math.random()*w,Math.random()*h,r,0,Math.PI*2); x.fill(); } });
+      t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(3,3); const m=new THREE.Mesh(new THREE.PlaneGeometry(BX*2-0.7,BZ-0.7),new THREE.MeshBasicMaterial({map:t})); m.rotation.x=Math.PI/2; m.position.set(0,y,-BZ/2); G[lv].add(m); };
+    star(1,CEIL[1]-0.01,"#1c2550"); star(-1,CEIL[-1]-0.02,"#0b1030");
+    floorWalls(-1,G[-1]); floorWalls(0,G[0]); floorWalls(1,G[1]);
+    // 계단
+    stairs(G[0],UP,true); stairs(G[0],DN,false);
+    // 1층: 위로 가는 계단 옆면 · 아래로 가는 계단 구멍 난간
+    C[0].push([UP.x0-0.1,UP.x0,UP.z0,UP.z1],[UP.x1,UP.x1+0.1,UP.z0,UP.z1],[UP.x0-0.1,UP.x1+0.1,UP.z0-0.1,UP.z0]);
+    box(0.1,FL[1]-FL[0],UP.z1-UP.z0,"#e0d2bc",UP.x1+0.05,(FL[0]+FL[1])/2,(UP.z0+UP.z1)/2,G[0]);
+    rail(G[0],0,DN.x0-0.1,DN.x0,DN.z0,DN.z1); rail(G[0],0,DN.x1,DN.x1+0.1,DN.z0,DN.z1); rail(G[0],0,DN.x0-0.1,DN.x1+0.1,DN.z0-0.1,DN.z0);
+    // 2층: 계단 구멍과 중앙 뚫린 공간 난간
+    rail(G[1],1,UP.x0-0.1,UP.x0,UP.z0,UP.z1); rail(G[1],1,UP.x1,UP.x1+0.1,UP.z0,UP.z1); rail(G[1],1,UP.x0-0.1,UP.x1+0.1,UP.z1,UP.z1+0.1);
+    rail(G[1],1,ATR.x0-0.1,ATR.x0,ATR.z0,ATR.z1); rail(G[1],1,ATR.x1,ATR.x1+0.1,ATR.z0,ATR.z1); rail(G[1],1,ATR.x0-0.1,ATR.x1+0.1,ATR.z0-0.1,ATR.z0); rail(G[1],1,ATR.x0-0.1,ATR.x1+0.1,ATR.z1,ATR.z1+0.1);
+    // 지하: 계단 옆면
+    C[-1].push([DN.x0-0.1,DN.x0,DN.z0,DN.z1],[DN.x1,DN.x1+0.1,DN.z0,DN.z1],[DN.x0-0.1,DN.x1+0.1,DN.z1,DN.z1+0.1]);
+    // 입장 게이트
+    gateMesh=new THREE.Group(); const p1=new THREE.Mesh(new THREE.BoxGeometry(0.25,1.0,0.25),M("#8a8f99")); p1.position.set(-1.25,FL[0]+0.5,-0.9); const p2=p1.clone(); p2.position.x=1.25;
+    const bar=new THREE.Mesh(new THREE.BoxGeometry(2.3,0.12,0.12),M("#e2574c")); bar.position.set(0,FL[0]+0.85,-0.9); gateMesh.add(p1,p2,bar); gateMesh.userData.bar=bar; G[0].add(gateMesh);
+    // 미끄럼틀
+    buildSlide(G[0]);
+    // 로비 꾸밈
+    plant(G[0],0,-12.8,-1.2); plant(G[0],0,12.8,-1.2); plant(G[1],1,-12.8,-1.2); plant(G[1],1,12.8,-1.2);
+    sofa(G[0],0,-3.4,-10.6,0); sofa(G[0],0,3.4,-10.6,0); sofa(G[1],1,-3.4,-10.6,0); sofa(G[1],1,3.4,-10.6,0);
+    const dir=canvasTex(512,640,(x,w,h)=>{ x.fillStyle="#2b2f3a"; rrect(x,6,6,w-12,h-12,24); x.fill(); x.fillStyle="#ffd166"; x.textAlign="center"; x.font=`900 54px ${FONT}`; x.fillText("층별 안내",w/2,90);
+      const rows=[["2층","전시실 A·B·C·D","🛝 미끄럼틀 출발!"],["1층","전시실 A·B·C·D","🎫 입장 · 로비"],["B1","태양계 모형관","🪐 행성 모형"]];
+      rows.forEach((r,i)=>{ const y=170+i*150; x.fillStyle="#e2574c"; rrect(x,30,y-50,110,90,18); x.fill(); x.fillStyle="#fff"; x.font=`900 46px ${FONT}`; x.fillText(r[0],85,y+12); x.textAlign="left"; x.font=`800 36px ${FONT}`; x.fillText(r[1],160,y-6); x.fillStyle="#cbd5e1"; x.font=`700 30px ${FONT}`; x.fillText(r[2],160,y+34); x.textAlign="center"; }); });
+    const dm=new THREE.Mesh(new THREE.PlaneGeometry(1.8,2.25),new THREE.MeshBasicMaterial({map:dir})); dm.position.set(-3.3,FL[0]+1.8,-T-0.02); dm.rotation.y=Math.PI; G[0].add(dm);
+    roomSign(G[0],"⬆ 2층 계단",-5.5,FL[0]+3.6,-1.2,0,2.0); roomSign(G[0],"⬇ 지하 · 태양계 모형관",5.5,FL[0]+3.6,-1.2,0,2.6); roomSign(G[1],"🛝 미끄럼틀 타는 곳",4.6,FL[1]+2.8,-3.6,-Math.PI/2,2.4);
+    roomSign(G[1],"⬇ 1층 계단",-5.5,FL[1]+2.6,-8.4,Math.PI,2.0);
+    // 전시실 문패
+    roomSigns=[];
+    [0,1].forEach(lv=>{ const f=FL[lv]+DOORH+0.45; const F=lv===1?"2층":"1층";
+      roomSigns.push({lv,room:"A",m:roomSign(G[lv],F+" 전시실 A",-7,f,-12.3,0)},{lv,room:"B",m:roomSign(G[lv],F+" 전시실 B",7,f,-12.3,0)},
+        {lv,room:"C",m:roomSign(G[lv],F+" 전시실 C",-10.5,f,-9.2,Math.PI)},{lv,room:"D",m:roomSign(G[lv],F+" 전시실 D",10.5,f,-9.2,Math.PI)}); });
+    buildSolar(G[-1]);
+  }
+  function buildSolar(g){
+    solarG=new THREE.Group(); const cy=FL[-1]+2.9, cz=-15; solarG.position.set(0,cy,cz); g.add(solarG);
+    const sun=new THREE.Mesh(new THREE.SphereGeometry(1.25,28,20),new THREE.MeshBasicMaterial({color:"#ffcc55"})); solarG.add(sun);
+    const glow=new THREE.Mesh(new THREE.SphereGeometry(1.6,24,16),new THREE.MeshBasicMaterial({color:"#ffaa33",transparent:true,opacity:0.25,depthWrite:false})); solarG.add(glow);
+    const ped=new THREE.Mesh(new THREE.CylinderGeometry(0.9,1.1,cy-1.25-FL[-1],16),M("#3a4270")); ped.position.set(0,FL[-1]+(cy-1.25-FL[-1])/2,cz); g.add(ped); C[-1].push([-1.1,1.1,cz-1.1,cz+1.1]);
+    const P=[["수성",2.4,0.16,"#b9b2a8",4.1],["금성",3.2,0.26,"#e8c88a",1.6],["지구",4.0,0.28,"#4f8fe8",1.0],["화성",4.8,0.2,"#d0623c",0.53],["목성",6.0,0.62,"#d9b48a",0.084],["토성",7.0,0.52,"#e9d39c",0.034],["천왕성",7.8,0.36,"#9fe3ea",0.012],["해왕성",8.5,0.35,"#4f6ff0",0.006]];
+    planets=P.map(([n,r,s,c,sp],i)=>{
+      const orb=new THREE.Mesh(new THREE.RingGeometry(r-0.02,r+0.02,96),new THREE.MeshBasicMaterial({color:"#8fa6ff",transparent:true,opacity:0.35,side:THREE.DoubleSide})); orb.rotation.x=-Math.PI/2; solarG.add(orb);
+      const pv=new THREE.Group(); solarG.add(pv); const m=new THREE.Mesh(new THREE.SphereGeometry(s,20,14),new THREE.MeshLambertMaterial({color:c,emissive:c,emissiveIntensity:0.25})); m.position.x=r; pv.add(m);
+      if(n==="토성"){ const ring=new THREE.Mesh(new THREE.RingGeometry(s*1.3,s*2.1,40),new THREE.MeshBasicMaterial({color:"#f3dfb2",side:THREE.DoubleSide,transparent:true,opacity:0.85})); ring.rotation.x=Math.PI/2.4; m.add(ring); }
+      const lt=nameSprite(n,false); lt.scale.set(0.9,0.22,1); lt.position.set(r,s+0.35,0); pv.add(lt);
+      pv.rotation.y=i*1.3; return {pv,sp:Math.max(0.05,Math.sqrt(sp))*0.5};
+    });
+    roomSign(g,"🪐 태양계 모형관 — 행성 크기·거리는 보기 쉽게 줄였어요",0,FL[-1]+3.3,-BZ+T+0.02,0,6.5);
+  }
+
+  /* ---- 작품 액자 ---- */
+  function wallSlots(lv,ax,az,bx,bz,nx,nz,gaps,sp){
+    const L=Math.hypot(bx-ax,bz-az), ux=(bx-ax)/L, uz=(bz-az)/L, out=[];
+    for(let s=1.2; s<=L-1.2+1e-6; s+=sp){ const x=ax+ux*s, z=az+uz*s; if(gaps.some(([g0,g1])=>{ const t=(ux? x:z); return t>Math.min(g0,g1)-1.05&&t<Math.max(g0,g1)+1.05; })) continue; out.push({lv,x,z,ry:Math.atan2(nx,nz)}); }
+    return out;
+  }
+  function roomSlots(sp){
+    const rooms=[]; const W=BX-T;
+    for(const lv of [0,1]){
+      const A=[].concat(wallSlots(lv,-W,-12.65,-W,-BZ+T,1,0,[],sp), wallSlots(lv,-W,-BZ+T,-0.15,-BZ+T,0,1,[],sp), wallSlots(lv,-0.15,-BZ+T,-0.15,-12.65,-1,0,[],sp), wallSlots(lv,-0.15,-12.65,-W,-12.65,0,-1,[[-8.2,-5.8]],sp));
+      const B=[].concat(wallSlots(lv,0.15,-12.65,0.15,-BZ+T,1,0,[],sp), wallSlots(lv,0.15,-BZ+T,W,-BZ+T,0,1,[],sp), wallSlots(lv,W,-BZ+T,W,-12.65,-1,0,[],sp), wallSlots(lv,W,-12.65,0.15,-12.65,0,-1,[[5.8,8.2]],sp));
+      const Cr=[].concat(wallSlots(lv,-7.15,-T,-W,-T,0,-1,[],sp), wallSlots(lv,-W,-T,-W,-8.85,1,0,[],sp), wallSlots(lv,-W,-8.85,-7.15,-8.85,0,1,[[-11.7,-9.3]],sp), wallSlots(lv,-7.15,-8.85,-7.15,-T,-1,0,[],sp));
+      const D=[].concat(wallSlots(lv,7.15,-T,W,-T,0,-1,[],sp), wallSlots(lv,W,-T,W,-8.85,-1,0,[],sp), wallSlots(lv,W,-8.85,7.15,-8.85,0,1,[[9.3,11.7]],sp), wallSlots(lv,7.15,-8.85,7.15,-T,1,0,[],sp));
+      rooms.push({lv,room:"A",s:A},{lv,room:"B",s:B},{lv,room:"C",s:Cr},{lv,room:"D",s:D});
+    }
+    const order=[0,1,4,5,2,3,6,7].map(i=>rooms[i]);
+    const b1=[].concat(wallSlots(-1,-W,-2,-W,-BZ+T,1,0,[],sp), wallSlots(-1,W,-BZ+T,W,-2,-1,0,[],sp), wallSlots(-1,-W,-BZ+T,W,-BZ+T,0,1,[[-3.3,3.3]],sp));
+    order.push({lv:-1,room:"B1",s:b1});
+    return order;
   }
   function labelTex(w){
     const cat=CATS[w.cat]||CATS.etc;
@@ -902,35 +1138,44 @@ const World=(()=>{
     texCache[w.id]={tex,src:w.th}; return tex;
   }
   let works=[];
+  function clearFrames(){ [-1,0,1].forEach(lv=>{ const g=FG[lv]; while(g.children.length){ const c=g.children.pop(); c.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.userData.ownMat){ if(o.material.map&&o.userData.ownMap) o.material.map.dispose(); o.material.dispose(); } }); } }); pickables=pickables.filter(p=>p.userData.booth); frameById={}; }
   function placeFrames(){
-    if(!framesG) return; while(framesG.children.length){ const c=framesG.children.pop(); c.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.userData.ownMat){ if(o.material.map&&o.userData.ownMap) o.material.map.dispose(); o.material.dispose(); } }); }
-    pickables=[]; frameById={};
-    works.forEach((w,i)=>{
-      const s=layout.slots[i]; if(!s) return;
-      const asp=(w.w&&w.h)?w.w/w.h:1; let fw=asp>=1.25?1.5:1.2*asp, fh=fw/asp; if(fh>1.2){ fh=1.2; fw=fh*asp; }
-      const g=new THREE.Group(); g.position.set(s.x,FLOOR+1.85,s.z); g.rotation.y=s.ry;
-      const fr=new THREE.Mesh(new THREE.BoxGeometry(fw+0.2,fh+0.2,0.07),M("#5a4030")); fr.position.z=0.035; g.add(fr);
-      const mat=new THREE.Mesh(new THREE.PlaneGeometry(fw+0.08,fh+0.08),M("#ffffff")); mat.position.z=0.072; g.add(mat);
-      const pm=new THREE.MeshBasicMaterial({map:photoTex(w),color:w.hidden?0x777777:0xffffff}); pm.userData={};
-      const pic=new THREE.Mesh(new THREE.PlaneGeometry(fw,fh),pm); pic.position.z=0.075; pic.userData={wid:w.id,ownMat:true}; g.add(pic);
-      fr.userData.wid=w.id;
-      const lb=new THREE.Mesh(new THREE.PlaneGeometry(1.4,0.44),new THREE.MeshBasicMaterial({map:labelTex(w),transparent:true})); lb.userData={ownMat:true,ownMap:true,wid:w.id}; lb.position.set(0,-fh/2-0.4,0.03); g.add(lb);
-      const lamp=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.06,0.18),M("#3a3a40")); lamp.position.set(0,fh/2+0.32,0.14); g.add(lamp);
-      const glow=new THREE.Mesh(new THREE.PlaneGeometry(fw+0.5,fh+0.6),new THREE.MeshBasicMaterial({color:"#fff3cf",transparent:true,opacity:0.35,depthWrite:false})); glow.userData.ownMat=true; glow.position.z=0.01; g.add(glow);
-      framesG.add(g); pickables.push(pic,fr,lb);
-      const nx=Math.sin(s.ry), nz=Math.cos(s.ry);
-      frameById[w.id]={x:s.x,z:s.z,nx,nz,g};
-    });
-    // 새로 사라진 작품의 텍스처 정리
+    clearFrames();
+    const N=works.length; let sp=2.4, sc=1;
+    let rooms=roomSlots(sp); let cap=rooms.reduce((a,r)=>a+r.s.length,0);
+    if(cap<N){ sp=1.75; sc=0.72; rooms=roomSlots(sp); cap=rooms.reduce((a,r)=>a+r.s.length,0); }
+    // 사용할 전시실 수: 9점마다 한 방씩 (최소 1, 최대 전체)
+    let K=Math.max(1,Math.min(rooms.length,Math.ceil(N/9)));
+    while(K<rooms.length&&rooms.slice(0,K).reduce((a,r)=>a+r.s.length,0)<N) K++;
+    const use=rooms.slice(0,K); const per=[]; let left=N;
+    use.forEach((r,i)=>{ const want=Math.ceil(left/(K-i)); per.push(Math.min(r.s.length,want)); left-=per[i]; });
+    for(let i=0;i<use.length&&left>0;i++){ const add=Math.min(left,use[i].s.length-per[i]); per[i]+=add; left-=add; }
+    const roomCats={}; let wi=0;
+    use.forEach((r,ri)=>{ const n=per[ri]; for(let k=0;k<n&&wi<N;k++,wi++){ const s=r.s[Math.floor((k+0.5)*r.s.length/n)]; addFrame(works[wi],s,sc); const key=r.lv+r.room; (roomCats[key]=roomCats[key]||new Set()).add((CATS[works[wi].cat]||CATS.etc).name); } });
+    roomSigns.forEach(o=>{ const F=o.lv===1?"2층":"1층"; const cs=roomCats[o.lv+o.room]; setSignText(o.m,`${F} 전시실 ${o.room}`+(cs?" · "+[...cs].slice(0,2).join("·"):"")); });
     const ids=new Set(works.map(w=>w.id)); Object.keys(texCache).forEach(k=>{ if(!ids.has(k)){ texCache[k].tex.dispose(); delete texCache[k]; } });
+  }
+  function addFrame(w,s,sc){
+    const asp=(w.w&&w.h)?w.w/w.h:1; let fw=(asp>=1.25?1.5:1.2*asp)*sc, fh=fw/asp; if(fh>1.2*sc){ fh=1.2*sc; fw=fh*asp; }
+    const g=new THREE.Group(); g.position.set(s.x,FL[s.lv]+1.85,s.z); g.rotation.y=s.ry;
+    const fr=new THREE.Mesh(new THREE.BoxGeometry(fw+0.2,fh+0.2,0.07),M("#5a4030")); fr.position.z=0.035; g.add(fr);
+    const mat=new THREE.Mesh(new THREE.PlaneGeometry(fw+0.08,fh+0.08),M("#ffffff")); mat.position.z=0.072; g.add(mat);
+    const pm=new THREE.MeshBasicMaterial({map:photoTex(w),color:w.hidden?0x777777:0xffffff});
+    const pic=new THREE.Mesh(new THREE.PlaneGeometry(fw,fh),pm); pic.position.z=0.075; pic.userData={wid:w.id,ownMat:true}; g.add(pic);
+    fr.userData.wid=w.id;
+    const lb=new THREE.Mesh(new THREE.PlaneGeometry(1.4*sc,0.44*sc),new THREE.MeshBasicMaterial({map:labelTex(w),transparent:true})); lb.userData={ownMat:true,ownMap:true,wid:w.id}; lb.position.set(0,-fh/2-0.4*sc,0.03); g.add(lb);
+    const lamp=new THREE.Mesh(new THREE.BoxGeometry(0.5*sc,0.06,0.18),M("#3a3a40")); lamp.position.set(0,fh/2+0.32,0.14); g.add(lamp);
+    const glow=new THREE.Mesh(new THREE.PlaneGeometry(fw+0.5,fh+0.6),new THREE.MeshBasicMaterial({color:s.lv===-1?"#4a5aa8":"#fff3cf",transparent:true,opacity:0.35,depthWrite:false})); glow.userData.ownMat=true; glow.position.z=0.01; g.add(glow);
+    FG[s.lv].add(g); pickables.push(pic,fr,lb);
+    frameById[w.id]={x:s.x,z:s.z,lv:s.lv,nx:Math.sin(s.ry),nz:Math.cos(s.ry),g};
   }
 
   /* ---- 입력 ---- */
-  let ptrs={}, look=null, pinch=null, joyId=null;
+  let ptrs={}, pinch=null, joyId=null;
   function bindInput(){
     const cv=R.domElement, joy=$("#joy"), knob=$("#knob");
     cv.addEventListener("contextmenu",e=>e.preventDefault());
-    cv.addEventListener("pointerdown",e=>{ if(inputPaused) return; cv.focus({preventScroll:true}); ptrs[e.pointerId]={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,t:performance.now(),moved:0};
+    cv.addEventListener("pointerdown",e=>{ if(inputPaused) return; cv.focus({preventScroll:true}); ptrs[e.pointerId]={x:e.clientX,y:e.clientY,t:performance.now(),moved:0};
       try{ cv.setPointerCapture(e.pointerId); }catch(x){}
       const ids=Object.keys(ptrs); if(ids.length===2){ const [a,b]=ids.map(i=>ptrs[i]); pinch={d:Math.hypot(a.x-b.x,a.y-b.y),dist,fov}; } });
     cv.addEventListener("pointermove",e=>{ const p=ptrs[e.pointerId]; if(!p) return; const dx=e.clientX-p.x, dy=e.clientY-p.y; p.x=e.clientX; p.y=e.clientY; p.moved+=Math.abs(dx)+Math.abs(dy);
@@ -953,6 +1198,7 @@ const World=(()=>{
     $("#zIn").onclick=()=>{ if(fp){ fov=Math.max(35,fov-8); cam.fov=effFov(); cam.updateProjectionMatrix(); } else dist=Math.max(2,dist-1); };
     $("#zOut").onclick=()=>{ if(fp){ fov=Math.min(80,fov+8); cam.fov=effFov(); cam.updateProjectionMatrix(); } else dist=Math.min(10,dist+1); };
     $("#bView").onclick=()=>setFP(!fp);
+    $("#act").onclick=()=>doAction();
     window.addEventListener("resize",resize); window.addEventListener("orientationchange",()=>setTimeout(resize,250));
     document.addEventListener("visibilitychange",()=>{ if(!document.hidden&&running){ clock.getDelta(); } });
   }
@@ -960,26 +1206,55 @@ const World=(()=>{
   function setFP(v){ fp=v; $("#bView").textContent=fp?"3인칭":"1인칭"; $("#cross").style.display=fp?"block":"none"; if(meAv) meAv.visible=!fp; pitch=fp?0.05:0.32; fov=60; cam.fov=effFov(); cam.updateProjectionMatrix(); }
   const ray=new THREE.Raycaster(), v2=new THREE.Vector2();
   function tap(cx,cy){
+    if(ride) return;
     const r=R.domElement.getBoundingClientRect(); v2.set(((cx-r.left)/r.width)*2-1,-((cy-r.top)/r.height)*2+1); ray.setFromCamera(v2,cam);
-    const hits=ray.intersectObjects([...pickables,...camBlock,...floorMeshes],false);
+    const objs=[...pickables,...camBlock,...floorMeshes].filter(o=>{ let p=o; while(p){ if(!p.visible) return false; p=p.parent; } return true; });
+    const hits=ray.intersectObjects(objs,false);
     for(const h of hits){
       const o=h.object;
-      if(o.userData.wid){ if(h.distance<16){ Gallery.openWork(o.userData.wid); } else { walkTo={x:h.point.x+(Math.sin(o.parent.rotation.y))*2, z:h.point.z+Math.cos(o.parent.rotation.y)*2}; toast("액자에 가까이 가는 중… 🚶"); } return; }
+      if(o.userData.booth){ if(h.distance<14) Gallery.openTicket(); else { walkTo={x:BOOTH.x-2,z:BOOTH.z}; } return; }
+      if(o.userData.wid){ if(h.distance<16){ Gallery.openWork(o.userData.wid); } else { const f=frameById[o.userData.wid]; if(f&&f.lv===me.lv) walkTo={x:f.x+f.nx*2,z:f.z+f.nz*2}; } return; }
+      if(o.userData.floor){ if(h.point.y>me.y-1.5&&h.point.y<me.y+1.5){ walkTo={x:h.point.x,z:h.point.z}; showMarker(h.point); } return; }
       if(o.userData.block) return;
-      if(o.userData.floor){ walkTo={x:h.point.x,z:h.point.z}; showMarker(h.point); return; }
     }
   }
   let marker=null;
   function showMarker(p){ if(!marker){ marker=new THREE.Mesh(new THREE.RingGeometry(0.18,0.28,24),new THREE.MeshBasicMaterial({color:"#e2574c",transparent:true,depthWrite:false})); marker.rotation.x=-Math.PI/2; scene.add(marker); } marker.position.set(p.x,p.y+0.03,p.z); marker.visible=true; marker.userData.t=1; }
 
-  /* ---- 이동 · 충돌 ---- */
-  function heightAt(x,z){
-    if(z<1.8&&z>-L&&Math.abs(x)<6.7) return FLOOR;
-    if(Math.abs(x)<5){ if(z>=1.8&&z<2.2) return 0.3; if(z>=2.2&&z<2.6) return 0.15; }
-    return 0;
+  /* ---- 입장권 · 미끄럼틀 ---- */
+  let actKind=null;
+  function setAction(kind){
+    if(kind===actKind) return; actKind=kind; const b=$("#act");
+    if(!kind){ b.style.display="none"; return; }
+    const hn=$("#hint"); if(hn) hn.style.opacity="0";
+    b.style.display=""; b.textContent=kind==="ticket"?"🎫 입장권 받기":kind==="myticket"?"🎫 내 입장권 보기":kind==="slide"?"🛝 미끄럼틀 타기!":"🎫 입장권이 필요해요";
   }
-  function collide(px,pz,r){
-    const all=colliders.concat(hallColliders);
+  function doAction(){ if(actKind==="ticket"||actKind==="myticket"||actKind==="gate") Gallery.openTicket(); else if(actKind==="slide") startRide(); }
+  function updateAction(){
+    if(ride) return setAction(null);
+    const dB=Math.hypot(me.x-(BOOTH.x-1.6),me.z-BOOTH.z);
+    if(me.lv===0&&dB<2.6) return setAction(gateOpen?"myticket":"ticket");
+    if(me.lv===0&&!gateOpen&&Math.abs(me.x)<2.2&&me.z>-0.5&&me.z<2.6) return setAction("gate");
+    if(me.lv===1&&me.x>ATR.x1&&me.x<ATR.x1+1.6&&Math.abs(me.z-HC.z)<1.3) return setAction("slide");
+    setAction(null);
+  }
+  function setGate(open){
+    gateOpen=open; if(!gateMesh) return; const bar=gateMesh.userData.bar;
+    bar.rotation.z=open?Math.PI/2:0; bar.position.x=open?-1.25:0; bar.position.y=FL[0]+(open?1.6:0.85);
+    const i=C[0].findIndex(b=>b.gate); if(open&&i>=0) C[0].splice(i,1); if(!open&&i<0){ const b=[-1.4,1.4,-1.0,-0.8]; b.gate=true; C[0].push(b); }
+  }
+  function startRide(){ if(ride) return; ride={s:0,v:0.05}; walkTo=null; me.lv=1; toast("꽉 잡아요! 🛝"); }
+  function stepRide(dt){
+    ride.v=Math.min(0.32,ride.v+dt*0.12); ride.s+=ride.v*dt;
+    const p=helixPoint(Math.min(1.2,ride.s)); me.x=p.x; me.z=p.z; me.y=p.y; me.rot=Math.atan2(p.tx,p.tz); me.lv=p.y>2.7?1:0;
+    yaw=Math.atan2(-p.tx,-p.tz); pitch=0.38; if(!fp) dist=3.6;
+    if(meAv){ meAv.position.set(me.x,me.y,me.z); meAv.rotation.y=me.rot; animAvatar(meAv,dt,false); }
+    if(ride.s>=1.2){ ride=null; me.lv=0; me.x=HC.x+HC.r; me.z=HC.z+2.9; me.y=FL[0]; emote("😆"); toast("와아! 1층 로비에 도착! 🛝",2600); }
+  }
+
+  /* ---- 이동 · 충돌 ---- */
+  function collide(px,pz,r,lv){
+    const all=C[lv]||[];
     for(let it=0;it<3;it++){
       for(const b of all){
         const cx=Math.max(b[0],Math.min(px,b[1])), cz=Math.max(b[2],Math.min(pz,b[3]));
@@ -990,28 +1265,29 @@ const World=(()=>{
         }
       }
     }
-    px=Math.max(-40,Math.min(40,px)); pz=Math.max(-L-14,Math.min(40,pz));
+    if(lv!==0){ px=Math.max(-BX+0.4,Math.min(BX-0.4,px)); pz=Math.max(-BZ+0.4,Math.min(-0.4,pz)); }
+    else { px=Math.max(-40,Math.min(40,px)); pz=Math.max(-BZ-14,Math.min(40,pz)); }
     return [px,pz];
   }
   let stuck=0;
   function step(dt){
-    let mx=0,mz=0;
-    let ix=jx, iy=jy;
+    if(ride) return stepRide(dt);
+    let mx=0,mz=0, ix=jx, iy=jy;
     if(keys.KeyW||keys.ArrowUp) iy-=1; if(keys.KeyS||keys.ArrowDown) iy+=1; if(keys.KeyA||keys.ArrowLeft) ix-=1; if(keys.KeyD||keys.ArrowRight) ix+=1;
     const il=Math.hypot(ix,iy); if(il>1){ ix/=il; iy/=il; }
     if(il>0.08){ walkTo=null; const fx=-Math.sin(yaw), fz=-Math.cos(yaw), rx=Math.cos(yaw), rz=-Math.sin(yaw); mx=fx*(-iy)+rx*ix; mz=fz*(-iy)+rz*ix; }
     else if(walkTo){ const dx=walkTo.x-me.x, dz=walkTo.z-me.z, d=Math.hypot(dx,dz); if(d<0.25){ walkTo=null; } else { const s=Math.min(1,d/0.6); mx=dx/d*s; mz=dz/d*s; } }
-    const ml=Math.hypot(mx,mz);
-    me.moving=ml>0.05;
+    const ml=Math.hypot(mx,mz); me.moving=ml>0.05;
     if(me.moving){
-      const sp=3.4*dt; const ox=me.x, oz=me.z;
-      const [nx,nz]=collide(me.x+mx*sp,me.z+mz*sp,0.32); me.x=nx; me.z=nz;
+      const sp=3.6*dt; const ox=me.x, oz=me.z;
+      const [nx,nz]=collide(me.x+mx*sp,me.z+mz*sp,0.32,me.lv); me.x=nx; me.z=nz;
+      me.lv=levelAt(me.x,me.z,me.lv);
       const moved=Math.hypot(me.x-ox,me.z-oz);
       if(walkTo){ if(moved<sp*0.15){ stuck+=dt; if(stuck>0.4){ walkTo=null; stuck=0; } } else stuck=0; }
       const target=Math.atan2(mx,mz); let d=target-me.rot; while(d>Math.PI) d-=Math.PI*2; while(d<-Math.PI) d+=Math.PI*2; me.rot+=d*Math.min(1,dt*12);
-      // 3인칭에서는 카메라가 천천히 따라 돌기 (조이스틱 전진일 때만)
+      if(!gateOpen&&me.lv===0&&me.z<0.4&&me.z>-0.5&&Math.abs(me.x)<1.4&&!step._warned){ step._warned=true; toast("🎫 매표소에서 입장권을 먼저 받아요! (오른쪽 앞 빨간 지붕)",3200); setTimeout(()=>step._warned=false,4000); }
     }
-    const hy=heightAt(me.x,me.z); me.y+=(hy-me.y)*Math.min(1,dt*14);
+    const hy=heightAt(me.x,me.z,me.lv); me.y+=(hy-me.y)*Math.min(1,dt*14); if(Math.abs(hy-me.y)>2) me.y=hy;
     if(meAv){ meAv.position.set(me.x,me.y,me.z); meAv.rotation.y=me.rot; animAvatar(meAv,dt,me.moving); }
   }
   const tgt=new THREE.Vector3(), cpos=new THREE.Vector3(), dir=new THREE.Vector3();
@@ -1020,7 +1296,7 @@ const World=(()=>{
       cam.position.set(me.x,me.y+1.3,me.z);
       dir.set(-Math.sin(yaw)*Math.cos(pitch),-Math.sin(pitch),-Math.cos(yaw)*Math.cos(pitch));
       cam.lookAt(cam.position.x+dir.x,cam.position.y+dir.y,cam.position.z+dir.z);
-      if(me.moving) me.rot=Math.atan2(-Math.sin(yaw),-Math.cos(yaw));
+      if(me.moving&&!ride) me.rot=Math.atan2(-Math.sin(yaw),-Math.cos(yaw));
       return;
     }
     tgt.set(me.x,me.y+1.35,me.z);
@@ -1029,21 +1305,28 @@ const World=(()=>{
     ray.set(tgt,dir); ray.far=dist+0.3; const h=ray.intersectObjects(camBlock,false); ray.far=Infinity;
     if(h.length) d=Math.max(0.6,Math.min(d,h[0].distance-0.25));
     cpos.copy(tgt).addScaledVector(dir,d);
-    const inside=me.z<0&&Math.abs(me.x)<HW;
-    if(inside&&cpos.y>FLOOR+CEIL-0.25) cpos.y=FLOOR+CEIL-0.25;
     if(cpos.y<me.y+0.3) cpos.y=me.y+0.3;
     cam.position.copy(cpos); cam.lookAt(tgt);
     if(meAv) meAv.visible=d>0.9;
   }
+  function updateVisibility(){
+    // 보이지 않는 층은 그리지 않아 태블릿 부담을 줄임
+    const ins=inside(me.x,me.z), lobby=Math.abs(me.x)<7.4&&me.z>-9.6, camIn=inside(cam.position.x,cam.position.z);
+    outG.visible=me.lv!==-1&&(!ins||me.z>-3.5||!camIn);
+    G[1].visible=me.lv===1||(me.lv===0&&(!ins||lobby||!camIn));
+    G[0].visible=me.lv===0||(me.lv===1&&lobby)||(me.lv===-1&&me.x>2.5&&me.z>-12);
+    G[-1].visible=me.lv===-1||(me.lv===0&&ins&&me.x>2.5&&me.z<-0.3&&me.z>-12.5);
+  }
 
   /* ---- 다른 친구들 ---- */
+  const wrapA=a=>{ a=((a+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI; return a; }; const encR=(r,lv)=>Math.round(wrapA(r)*100)/100+10*(lv+1), decR=v=>{ v=+v||0; const k=Math.round(v/10); return {lv:Math.max(-1,Math.min(1,k-1)), r:v-10*k}; };
   function upsertOther(uid,v){
     if(!scene||!v) return;
-    let o=others[uid];
-    const look=`${v.a|0}-${v.h|0}-${v.n}`;
+    let o=others[uid]; const d=decR(v.r);
+    const look=`${v.a|0}-${v.h|0}-${v.n}-${!!v.tc}`;
     if(o&&o.look!==look){ removeOther(uid); o=null; }
-    if(!o){ if(Object.keys(others).length>=45) return; const av=makeAvatar(v.a|0,v.h|0,String(v.n||"친구").slice(0,16),!!v.tc); av.position.set(v.x||0,heightAt(v.x||0,v.z||0),v.z||0); av.rotation.y=v.r||0; othersG.add(av); o=others[uid]={av,look,x:v.x||0,z:v.z||0,r:v.r||0,tx:v.x||0,tz:v.z||0,tr:v.r||0,et:v.et||0,t:v.t||0}; }
-    o.tx=+v.x||0; o.tz=+v.z||0; o.tr=+v.r||0; o.t=+v.t||0;
+    if(!o){ if(Object.keys(others).length>=45) return; const av=makeAvatar(v.a|0,v.h|0,String(v.n||"친구").slice(0,16),!!v.tc); av.position.set(v.x||0,heightAt(v.x||0,v.z||0,d.lv),v.z||0); av.rotation.y=d.r; othersG.add(av); o=others[uid]={av,look,x:v.x||0,z:v.z||0,r:d.r,lv:d.lv,tx:v.x||0,tz:v.z||0,tr:d.r,et:v.et||0,t:v.t||0}; }
+    o.tx=+v.x||0; o.tz=+v.z||0; o.tr=d.r; o.lv=d.lv; o.t=+v.t||0;
     if(v.et&&v.et!==o.et){ o.et=v.et; if(v.e&&DB.now()-v.et<5000) showBubble(o.av,String(v.e).slice(0,4)); }
   }
   function removeOther(uid){ const o=others[uid]; if(!o) return; othersG.remove(o.av); o.av.traverse(x=>{ if(x.geometry) x.geometry.dispose(); if(x.isSprite){ x.material.map.dispose(); x.material.dispose(); } }); delete others[uid]; }
@@ -1052,13 +1335,13 @@ const World=(()=>{
     for(const k in others){ const o=others[k]; const fresh=now-o.t<75000; o.av.visible=fresh; if(!fresh) continue; n++;
       const k2=Math.min(1,dt*7); const ox=o.x, oz=o.z; o.x+=(o.tx-o.x)*k2; o.z+=(o.tz-o.z)*k2;
       let d=o.tr-o.r; while(d>Math.PI) d-=Math.PI*2; while(d<-Math.PI) d+=Math.PI*2; o.r+=d*Math.min(1,dt*10);
-      const mv=Math.hypot(o.x-ox,o.z-oz)/Math.max(dt,0.001)>0.4; const y=heightAt(o.x,o.z);
-      o.av.position.set(o.x,o.av.position.y+(y-o.av.position.y)*Math.min(1,dt*12),o.z); o.av.rotation.y=o.r; animAvatar(o.av,dt,mv); }
+      const mv=Math.hypot(o.x-ox,o.z-oz)/Math.max(dt,0.001)>0.4; const y=heightAt(o.x,o.z,o.lv);
+      o.av.position.set(o.x,Math.abs(y-o.av.position.y)>2?y:o.av.position.y+(y-o.av.position.y)*Math.min(1,dt*12),o.z); o.av.rotation.y=o.r; animAvatar(o.av,dt,mv); }
     return n;
   }
   function emote(e){ if(!meAv) return; showBubble(meAv,e); myEmo={e,et:DB.now()}; sendLive(true); }
   function sendLive(force){
-    const now=performance.now(); const p={n:ST.me.nick.slice(0,16),a:ST.me.a|0,h:ST.me.h|0,x:Math.round(me.x*100)/100,z:Math.round(me.z*100)/100,r:Math.round(me.rot*100)/100,t:DB.TS};
+    const now=performance.now(); const p={n:ST.me.nick.slice(0,16),a:ST.me.a|0,h:ST.me.h|0,x:Math.round(me.x*100)/100,z:Math.round(me.z*100)/100,r:encR(me.rot,me.lv),t:DB.TS};
     if(myEmo.e){ p.e=myEmo.e; p.et=myEmo.et; }
     if(ST.me.teacher) p.tc=true;
     const changed=!lastSent||Math.abs(p.x-lastSent.x)>0.05||Math.abs(p.z-lastSent.z)>0.05||Math.abs(p.r-lastSent.r)>0.15;
@@ -1066,21 +1349,20 @@ const World=(()=>{
   }
 
   /* ---- 루프 ---- */
-  let lastLoc="", lastOn=-1, perfT=0, perfN=0, perfAcc=0;
+  let lastLoc="", lastOn=-1, perfN=0, perfAcc=0;
   function loop(){
     if(!running) return; raf=requestAnimationFrame(loop);
     if(document.hidden) return;
     const dt=Math.min(0.05,clock.getDelta());
-    if(!inputPaused) step(dt); else if(meAv) animAvatar(meAv,dt,false);
+    if(!inputPaused||ride) step(dt); else if(meAv) animAvatar(meAv,dt,false);
     const n=stepOthers(dt);
-    updateCam();
-    if(hallG&&hallG.userData.sat) hallG.userData.sat.rotation.y+=dt*0.3;
+    updateCam(); updateVisibility(); updateAction();
+    if(solarG&&G[-1].visible){ planets.forEach(p=>p.pv.rotation.y+=dt*p.sp); }
     if(marker&&marker.visible){ marker.userData.t-=dt; marker.material.opacity=Math.max(0,marker.userData.t); if(marker.userData.t<=0||!walkTo) marker.visible=false; }
     sendLive(false);
-    const loc=(me.z<0&&Math.abs(me.x)<HW)?"전시관 안":"전시관 앞"; if(loc!==lastLoc){ lastLoc=loc; $("#locTag").textContent=loc; }
+    const loc=zoneName(me.x,me.z,me.lv); if(loc!==lastLoc){ lastLoc=loc; $("#locTag").textContent=loc; }
     if(n!==lastOn){ lastOn=n; $("#online").textContent=`👥 ${n}명`; }
     R.render(scene,cam);
-    // 느린 태블릿이면 해상도를 낮춤
     perfAcc+=dt; perfN++; if(perfAcc>3){ const avg=perfAcc/perfN; if(avg>0.045&&R.getPixelRatio()>1){ R.setPixelRatio(1); resize(); } perfAcc=0; perfN=0; }
   }
   function effFov(){ return fov*(cam&&cam.aspect<1?1.2:1); }
@@ -1092,14 +1374,14 @@ const World=(()=>{
       inited=true;
       R=new THREE.WebGLRenderer({canvas:$("#cv"),antialias:true,powerPreference:"high-performance"});
       R.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
-      scene=new THREE.Scene(); scene.background=new THREE.Color("#cfeaff"); scene.fog=new THREE.Fog("#cfeaff",45,130);
+      scene=new THREE.Scene(); scene.background=new THREE.Color("#cfeaff"); scene.fog=new THREE.Fog("#cfeaff",55,140);
       cam=new THREE.PerspectiveCamera(fov,1,0.1,300);
       scene.add(new THREE.HemisphereLight(0xffffff,0xb9d4b0,0.52));
       const sun=new THREE.DirectionalLight(0xfff6e6,0.5); sun.position.set(6,12,9); scene.add(sun);
       scene.add(new THREE.AmbientLight(0xffffff,0.12));
       clock=new THREE.Clock();
-      buildStatic(); othersG=new THREE.Group(); scene.add(othersG);
-      layout=computeLayout(0); L=layout.L; buildHall();
+      buildOutdoor(); buildBuilding(); othersG=new THREE.Group(); scene.add(othersG);
+      setGate(false);
       bindInput();
     }
     resize(); running=true; clock.getDelta(); cancelAnimationFrame(raf); raf=requestAnimationFrame(loop);
@@ -1108,27 +1390,29 @@ const World=(()=>{
   function spawnMe(p){
     if(meAv){ scene.remove(meAv); meAv.traverse(x=>{ if(x.geometry) x.geometry.dispose(); }); }
     meAv=makeAvatar(p.a,p.h,p.nick,p.teacher); scene.add(meAv);
-    me.x=(Math.random()-0.5)*3; me.z=21+Math.random()*2; me.y=0; me.rot=Math.PI; yaw=0; pitch=0.32; dist=5.2; walkTo=null; setFP(false);
+    me.x=(Math.random()-0.5)*3; me.z=21+Math.random()*2; me.y=0; me.lv=0; me.rot=Math.PI; yaw=0; pitch=0.32; dist=5.2; walkTo=null; ride=null; setFP(false);
     for(const k in others) removeOther(k);
     lastSent=null; lastSend=0; myEmo={e:"",et:0}; sendLive(true);
   }
-  function setWorks(list){
-    works=list; const nl=computeLayout(list.length);
-    if(nl.L!==L||nl.part!==layout.part){ layout=nl; L=nl.L; buildHall(); } else layout=nl;
-    placeFrames();
-  }
+  function setWorks(list){ works=list; placeFrames(); }
   function goToWork(id){
-    const f=frameById[id]; if(!f){ toast("아직 액자를 준비하는 중이에요. 잠시 후 다시 눌러 주세요."); return; }
-    // 액자 정면에서 살짝 옆에 서서, 내 캐릭터가 작품을 가리지 않게 함
-    const port=cam.aspect<1, lat=port?0.85:1.3, back=port?3.3:3.0; const tx=f.nz, tz=-f.nx; const x=f.x+f.nx*back+tx*lat, z=f.z+f.nz*back+tz*lat; const [cx,cz]=collide(x,z,0.32); me.x=cx; me.z=cz; me.y=FLOOR; walkTo=null;
-    me.rot=Math.atan2(f.x-cx,f.z-cz); const al=port?-0.32:-0.55; yaw=Math.atan2(f.nx*Math.cos(al)+tx*Math.sin(al),f.nz*Math.cos(al)+tz*Math.sin(al)); pitch=fp?0.0:(port?0.4:0.12); if(!fp) dist=Math.min(dist,3.4); sendLive(true);
+    const f=frameById[id]; if(!f){ toast("아직 액자를 준비하는 중이에요. 잠시 후 다시 눌러 주세요."); return false; }
+    if(!gateOpen){ toast("🎫 먼저 매표소에서 입장권을 받아야 들어갈 수 있어요!",3200); me.x=BOOTH.x-2.4; me.z=BOOTH.z+0.5; me.lv=0; me.y=0; yaw=Math.atan2(-1,0.3); pitch=0.3; ride=null; sendLive(true); return false; }
+    const port=cam.aspect<1, lat=port?0.85:1.3, back=port?3.3:3.0; const tx=f.nz, tz=-f.nx;
+    me.lv=f.lv; const [cx,cz]=collide(f.x+f.nx*back+tx*lat,f.z+f.nz*back+tz*lat,0.32,f.lv); me.x=cx; me.z=cz; me.y=FL[f.lv]; walkTo=null; ride=null;
+    me.rot=Math.atan2(f.x-cx,f.z-cz); const al=port?-0.32:-0.55; yaw=Math.atan2(f.nx*Math.cos(al)+tx*Math.sin(al),f.nz*Math.cos(al)+tz*Math.sin(al));
+    pitch=fp?0.0:(port?0.4:0.12); if(!fp) dist=Math.min(dist,3.4); sendLive(true); return true;
   }
-  function stop(){ running=false; cancelAnimationFrame(raf); jx=jy=0; for(const k in keys) keys[k]=false; for(const k in others) removeOther(k); }
+  function stop(){ running=false; cancelAnimationFrame(raf); jx=jy=0; ride=null; for(const k in keys) keys[k]=false; for(const k in others) removeOther(k); }
   function pauseInput(v){ inputPaused=v; if(v){ jx=jy=0; walkTo=null; ptrs={}; pinch=null; $("#knob").style.transform=""; for(const k in keys) keys[k]=false; } }
-  return {init,setExhibition,spawnMe,setWorks,goToWork,stop,pauseInput,upsertOther,removeOther,emote,
-    _state:()=>({me:{...me},L,part:layout.part,slots:layout.slots.length,frames:Object.keys(frameById).length,others:Object.keys(others).length,fp,yaw,pitch,dist,colliders:colliders.length+hallColliders.length}),
-    _tap:tap, _frame:id=>frameById[id], _project:(x,y,z)=>{ const v=new THREE.Vector3(x,y,z).project(cam); const r=R.domElement.getBoundingClientRect(); return {x:(v.x+1)/2*r.width+r.left,y:(1-v.y)/2*r.height+r.top,z:v.z}; }};
+  return {init,setExhibition,spawnMe,setWorks,goToWork,stop,pauseInput,upsertOther,removeOther,emote,setGate,startRide,
+    _state:()=>({cam:cam?{x:cam.position.x,y:cam.position.y,z:cam.position.z}:null,vis:{out:outG&&outG.visible,b1:G[-1]&&G[-1].visible,f2:G[1]&&G[1].visible},me:{...me},frames:Object.keys(frameById).length,others:Object.keys(others).length,fp,yaw,pitch,dist,gate:gateOpen,ride:!!ride,act:actKind,colliders:C[-1].length+C[0].length+C[1].length}),
+    _info:()=>({calls:R.info.render.calls,tris:R.info.render.triangles,geo:R.info.memory.geometries,tex:R.info.memory.textures}),
+    _tp:(x,z,lv)=>{ me.x=x; me.z=z; me.lv=lv; me.y=heightAt(x,z,lv); walkTo=null; },
+    _setView:(y,p,d)=>{ yaw=y; pitch=p; if(d) dist=d; },
+    _frame:id=>frameById[id], _project:(x,y,z)=>{ const v=new THREE.Vector3(x,y,z).project(cam); const r=R.domElement.getBoundingClientRect(); return {x:(v.x+1)/2*r.width+r.left,y:(1-v.y)/2*r.height+r.top,z:v.z}; }};
 })();
+
 window.World=World;
 
 /* ============================================================
@@ -1155,7 +1439,8 @@ const Teacher={
     $("#tGo").onclick=go; $("#tP").onkeydown=e=>{ if(e.key==="Enter") go(); };
   },
   galleryLink(code){ return location.origin+location.pathname.replace(/[^/]*$/,"")+"?c="+code; },
-  skyLink(code){ const s=(localStorage.getItem("gal-sky")||"").trim(); if(!s) return ""; return s+(s.includes("?")?"&":"?")+"g="+encodeURIComponent(this.galleryLink(code)); },
+  skyBase(){ return (localStorage.getItem("gal-sky")||"").trim() || (location.origin+location.pathname.replace(/[^/]*$/,"")+"observatory/"); },
+  skyLink(code){ const s=this.skyBase(); if(!s) return ""; return s+(s.includes("?")?"&":"?")+"g="+encodeURIComponent(this.galleryLink(code)); },
   listView(){
     this.clear(); this.cur=null;
     $("#tWrap").innerHTML=`<div class="row" style="align-items:center"><h1 class="logo" style="flex:1">🪐 우리 반 3D 우주 전시관 · 선생님</h1><button class="btn sm" id="tOut" style="flex:0 0 auto">로그아웃</button></div>
@@ -1186,13 +1471,11 @@ const Teacher={
     $("#tWrap").innerHTML=`<div class="row"><button class="btn sm" id="mBack" style="flex:0 0 auto">← 목록</button><h1 class="logo" style="flex:1;margin-left:10px" id="mTitle">전시회</h1></div>
       <div class="tcard"><div class="row" style="flex-wrap:wrap;align-items:flex-start;gap:24px">
         <div style="flex:1 1 300px"><div class="small">전시 코드</div><div class="codebig">${code}</div>
-          <label class="f">① 전시관 바로가기 링크</label><div class="linkbox"><input readonly value="${esc(link)}" id="lk1"><button class="btn sm" data-copy="lk1">복사</button></div>
-          <label class="f">② 천체 사진관 + 전시관 연결 링크 <span class="small">(학생들이 사진관에서 찍은 사진을 바로 전시관에 올릴 수 있어요)</span></label>
-          <div class="linkbox"><input id="skyIn" placeholder="천체 사진관 주소 (예: https://아이디.github.io/scope/)" value="${esc(localStorage.getItem("gal-sky")||"")}"><button class="btn sm" id="skySave">저장</button></div>
-          <div class="linkbox"><input readonly id="lk2" value="${esc(this.skyLink(code))}" placeholder="위에 사진관 주소를 저장하면 만들어져요"><button class="btn sm" data-copy="lk2">복사</button></div>
+          <label class="f">학생 입장 링크</label><div class="linkbox"><input readonly value="${esc(link)}" id="lk1"><button class="btn sm" data-copy="lk1">복사</button></div>
+          <p class="small" style="margin:0 0 6px">학생은 이 링크(QR) 하나로 <b>망원경 조립 → 밤하늘 관측 → 전시관</b>까지 모두 해요.</p>
           <div class="btnrow"><button class="btn navy" id="mBoard">📺 칠판에 크게 띄우기</button><button class="btn grn" id="mEnter">🏛️ 전시관 들어가기</button></div>
         </div>
-        <div class="qrs"><div><div class="qrbox" id="qr1"></div>전시관 QR</div><div><div class="qrbox" id="qr2"></div>사진관+전시관 QR</div></div>
+        <div class="qrs"><div><div class="qrbox" id="qr1"></div>학생 입장 QR</div></div>
       </div></div>
       <div class="tcard"><h3>⚙️ 설정</h3>
         <label class="sw"><input type="checkbox" id="swOpen"> 전시관 열기 <span class="small">(끄면 학생들이 들어올 수 없어요)</span></label>
@@ -1201,11 +1484,10 @@ const Teacher={
       <div class="tcard"><h3>🖼️ 작품 <span class="small" id="wCnt"></span></h3><div style="overflow:auto"><table class="wt" id="wt"></table></div></div>`;
     $("#mBack").onclick=()=>this.listView();
     $$("[data-copy]").forEach(b=>b.onclick=()=>{ const i=$("#"+b.dataset.copy); if(!i.value) return; i.select(); try{ navigator.clipboard.writeText(i.value).then(()=>toast("복사했어요!"),()=>{ document.execCommand("copy"); toast("복사했어요!"); }); }catch(e){ document.execCommand("copy"); toast("복사했어요!"); } });
-    const drawQR=(el,txt)=>{ el.innerHTML=""; if(!txt){ el.innerHTML='<div class="small" style="width:180px;height:180px;display:flex;align-items:center;justify-content:center;text-align:center">사진관 주소를<br>저장하면 생겨요</div>'; return; } if(typeof QRCode==="undefined"){ el.innerHTML='<div class="small" style="width:180px">QR을 불러오지 못했어요.<br>링크를 복사해서 쓰세요.</div>'; return; } new QRCode(el,{text:txt,width:180,height:180,correctLevel:QRCode.CorrectLevel.M}); };
-    drawQR($("#qr1"),link); drawQR($("#qr2"),this.skyLink(code));
-    $("#skySave").onclick=()=>{ let s=$("#skyIn").value.trim(); if(s&&!/^https?:\/\//.test(s)){ toast("https:// 로 시작하는 주소를 넣어 주세요."); return; } localStorage.setItem("gal-sky",s); $("#lk2").value=this.skyLink(code); drawQR($("#qr2"),this.skyLink(code)); toast(s?"저장했어요!":"지웠어요."); };
+    const drawQR=(el,txt)=>{ el.innerHTML=""; if(!txt){ el.innerHTML='<div class="small" style="width:180px;height:180px;display:flex;align-items:center;justify-content:center;text-align:center">관측관 주소를<br>저장하면 생겨요</div>'; return; } if(typeof QRCode==="undefined"){ el.innerHTML='<div class="small" style="width:180px">QR을 불러오지 못했어요.<br>링크를 복사해서 쓰세요.</div>'; return; } new QRCode(el,{text:txt,width:180,height:180,correctLevel:QRCode.CorrectLevel.M}); };
+    drawQR($("#qr1"),link);
     $("#mBoard").onclick=()=>{ const d=document.createElement("div"); d.className="board"; d.innerHTML=`<div><div style="font-size:30px;font-weight:800" id="bdT"></div><div style="font-size:26px;margin-top:20px;opacity:.8">전시 코드</div><div class="codebig">${code}</div><div style="font-size:20px;opacity:.7">화면 아무 곳이나 누르면 닫혀요</div></div><div class="qrbox" id="bq" style="padding:16px"></div>`; document.body.appendChild(d);
-      $("#bdT").textContent=$("#mTitle").textContent; const big=this.skyLink(code)||link; if(typeof QRCode!=="undefined") new QRCode($("#bq"),{text:big,width:320,height:320,correctLevel:QRCode.CorrectLevel.M}); d.onclick=()=>d.remove(); };
+      $("#bdT").textContent=$("#mTitle").textContent; const big=link; if(typeof QRCode!=="undefined") new QRCode($("#bq"),{text:big,width:320,height:320,correctLevel:QRCode.CorrectLevel.M}); d.onclick=()=>d.remove(); };
     $("#mEnter").onclick=async()=>{ const m=await DB.get(`ex/${code}/meta`); if(!m) return; ST.code=code; ST.meta=m; const s=Join.saved()||{}; ST.me={num:"",name:"선생님",a:s.a|0,h:s.h|0,teacher:true,nick:"선생님"}; this.clear(); Gallery.enter(); };
     let meta=null;
     this.un.push(DB.on(`ex/${code}/meta`,m=>{ if(!m){ if(this.cur===code){ toast("전시회가 없어요."); this.listView(); } return; } meta=m; $("#mTitle").textContent=`${m.cls||""} · ${m.title||""}`; $("#swOpen").checked=m.open!==false; $("#swUp").checked=m.upload!==false; }));
