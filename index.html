@@ -335,6 +335,18 @@ function parseInfo(text){
   return out;
 }
 
+/* ---------- 바른 말 지킴이 (욕설·비하 표현 막기) ---------- */
+const BAD_WORDS=["시발","씨발","씨바","시바","씨빨","씨팔","시팔","쉬발","쉬바","슈발","십알","씹","씨부","개새","개색","개세","개쉐","개쌔","개같","새끼","쌔끼","섀끼","병신","븅신","빙신","병싄","지랄","좆","좃","존나","졸라","졸랭","닥쳐","꺼져","꺼지라","미친","미쳤","미췬","또라이","돌아이","등신","찐따","애미","느금","니엄","엠창","썅","쌍년","쌍놈","걸레","꼴통","호구","찌질","쓰레기","뒤져","뒈져","죽을래","죽여","극혐","재수없","못생","멍청","바보","병맛","한남","한녀","틀딱","급식충","ㅅㅂ","ㅆㅂ","ㅂㅅ","ㅄ","ㅈㄹ","ㅈㄴ","ㅁㅊ","ㄲㅈ","ㄷㅊ","ㅅㄲ","ㅗㅗ","fuck","fuk","shit","bitch","stfu","wtf","sex"];
+const OK_WORDS=["시발점","시발역","시바견","시바이누","우주쓰레기","영향을미친","영향을미쳤","영향미친","영향미쳤","에미친","에미쳤","을미친","을미쳤","를미친","를미쳤","불이꺼져","빛이꺼져","불꺼져"];
+function badWord(text){
+  const t=String(text||"").toLowerCase();
+  let n=t.replace(/[\s\d!-/:-@\[-`{-~·ㆍ…♡♥★☆※'"“”‘’]/g,"");
+  OK_WORDS.forEach(w=>{ n=n.split(w).join(""); });
+  if(/^ㅗ+$/.test(n)||/(^|[^가-힣])ㅗ($|[^가-힣])/.test(t)) return "ㅗ";
+  return BAD_WORDS.find(w=>n.includes(w))||null;
+}
+const BAD_MSG="🙅 바르고 고운 말로 써 주세요. 사용할 수 없는 말이 들어 있어요.";
+
 /* ---------- 설정 읽기 ---------- */
 let CFG=null;
 function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement("script"); s.src=src; s.onload=()=>res(); s.onerror=()=>rej(new Error("load "+src)); document.head.appendChild(s); }); }
@@ -513,6 +525,7 @@ const Join={
     const teacher=isTeacher();
     if(!teacher && !num){ $("#jErr").textContent="번호를 입력해 주세요."; $("#jNum").focus(); return; }
     if(!name){ $("#jErr").textContent="이름을 입력해 주세요."; $("#jName").focus(); return; }
+    if(badWord(name)){ $("#jErr").textContent="이름에 사용할 수 없는 말이 있어요."; return; }
     ST.me={num,name,a:this.look.a,h:this.look.h,teacher,nick:(num?num+"번 ":"")+name};
     try{ localStorage.setItem("gal-me",JSON.stringify({code:ST.code,num,name,a:this.look.a,h:this.look.h})); }catch(e){}
     if(sessionStorage.getItem("gal-add")) Gallery.enter(); else App.toObs();
@@ -645,9 +658,10 @@ const Gallery={
     un1=DB.on(`ex/${c}/claps/${id}`,v=>{ this.claps[id]=v||undefined; if(!v) delete this.claps[id]; drawClap(); });
     $("#dclap").onclick=async()=>{ const on=!!(this.claps[id]&&this.claps[id][DB.uid]);
       try{ await DB.set(`ex/${c}/claps/${id}/${DB.uid}`,on?null:true); if(!on) World.emote("👏"); }catch(e){ toast(errText(e)); } };
-    un2=DB.on(`ex/${c}/notes/${id}`,v=>{ const el=$("#dnotes"); if(!el) return; const ls=Object.values(v||{}).sort((a,b)=>a.t-b.t).slice(-40);
-      el.innerHTML=ls.length?ls.map(n=>`<div class="note"><b>${esc(n.n)}</b> ${esc(n.m)}</div>`).join(""):`<div class="small" style="padding:6px 0">첫 감상을 남겨 주세요!</div>`; },40);
-    const send=async()=>{ const m=$("#dni").value.trim().slice(0,60); if(!m) return; $("#dns").disabled=true;
+    un2=DB.on(`ex/${c}/notes/${id}`,v=>{ const el=$("#dnotes"); if(!el) return; const ls=Object.entries(v||{}).sort((a,b)=>a[1].t-b[1].t).slice(-40);
+      el.innerHTML=ls.length?ls.map(([k,n])=>`<div class="note"><b>${esc(n.n)}</b> ${esc(n.m)}${t?` <button class="btn sm" data-nk="${esc(k)}" style="min-height:30px;padding:2px 9px;float:right;background:#fde2e1;color:#b42318">삭제</button>`:""}</div>`).join(""):`<div class="small" style="padding:6px 0">첫 감상을 남겨 주세요!</div>`;
+      if(t) $$("#dnotes [data-nk]").forEach(b=>b.onclick=async()=>{ if(!await ask("이 감상을 삭제할까요?","삭제")) return; DB.remove(`ex/${c}/notes/${id}/${b.dataset.nk}`).then(()=>toast("감상을 삭제했어요.")).catch(e=>toast(errText(e))); }); },40);
+    const send=async()=>{ const m=$("#dni").value.trim().slice(0,60); if(!m) return; if(badWord(m)){ toast(BAD_MSG,3200); return; } $("#dns").disabled=true;
       try{ await withTimeout(DB.set(`ex/${c}/notes/${id}/${DB.key(`ex/${c}/notes/${id}`)}`,{uid:DB.uid,n:ST.me.nick.slice(0,16),m,t:DB.TS}),12000,"TIMEOUT"); $("#dni").value=""; }
       catch(e){ toast(errText(e)); } finally{ const b=$("#dns"); if(b) b.disabled=false; } };
     $("#dns").onclick=send; $("#dni").onkeydown=e=>{ if(e.key==="Enter") send(); };
@@ -665,7 +679,7 @@ const Gallery={
     const un=DB.on(`ex/${c}/wall`,v=>{ const el=$("#wl"); if(!el) return; const ls=Object.entries(v||{}).sort((a,b)=>b[1].t-a[1].t);
       el.innerHTML=ls.length?ls.map(([k,m])=>`<div class="m">${esc(m.m)}<small>— ${esc(m.n)}</small>${t?`<button class="btn sm" data-k="${esc(k)}" style="position:absolute;right:6px;top:6px;min-height:30px;padding:2px 8px">✕</button>`:""}</div>`).join(""):`<p class="sub">아직 방명록이 비어 있어요.</p>`;
       if(t) $$("#wl button[data-k]").forEach(b=>b.onclick=()=>DB.remove(`ex/${c}/wall/${b.dataset.k}`).catch(e=>toast(errText(e)))); },80);
-    const send=async()=>{ const m=$("#wi").value.trim().slice(0,50); if(!m) return; $("#ws").disabled=true;
+    const send=async()=>{ const m=$("#wi").value.trim().slice(0,50); if(!m) return; if(badWord(m)){ toast(BAD_MSG,3200); return; } $("#ws").disabled=true;
       try{ await withTimeout(DB.set(`ex/${c}/wall/${DB.key(`ex/${c}/wall`)}`,{uid:DB.uid,n:ST.me.nick.slice(0,16),m,t:DB.TS}),12000,"TIMEOUT"); $("#wi").value=""; World.emote("❤️"); }
       catch(e){ toast(errText(e)); } finally{ const b=$("#ws"); if(b) b.disabled=false; } };
     $("#ws").onclick=send; $("#wi").onkeydown=e=>{ if(e.key==="Enter") send(); };
@@ -783,6 +797,7 @@ const Upload={
     const E=$("#uerr"); E.textContent="";
     if(!this.img){ E.textContent="먼저 사진을 골라 주세요. (관측 도감 또는 사진 칸)"; return; }
     if(!name){ E.textContent="천체 이름을 써 주세요."; $("#uname").focus(); return; }
+    if(badWord(name+" "+desc)){ E.textContent=BAD_MSG; return; }
     if(Gallery.myWorks().length>=10&&!isTeacher()){ E.textContent="한 사람이 10개까지 올릴 수 있어요. 예전 작품을 지우고 올려 주세요."; return; }
     this.busy=true; const go=$("#ugo"); go.disabled=true; go.textContent="올리는 중…";
     const pr=$("#uprog"); pr.style.display="block"; const bar=pr.firstElementChild; bar.style.width="15%";
@@ -1489,6 +1504,9 @@ const Teacher={
         <label class="sw"><input type="checkbox" id="swOpen"> 전시관 열기 <span class="small">(끄면 학생들이 들어올 수 없어요)</span></label>
         <label class="sw"><input type="checkbox" id="swUp"> 학생 사진 올리기 허용</label>
         <div class="btnrow"><button class="btn sm" id="mEdit" style="flex:0 0 auto">✏️ 학반·제목 바꾸기</button><button class="btn sm" id="mWallClear" style="flex:0 0 auto">💬 방명록 비우기</button><button class="btn sm" id="mDel" style="flex:0 0 auto;background:#fde2e1;color:#b42318">🗑️ 전시회 삭제</button></div></div>
+      <div class="tcard"><h3>💬 한 줄 감상 · 방명록 관리 <span class="small">(비꼬는 말 등은 여기서 바로 지워요)</span></h3>
+        <div class="list-filter" id="cmTab"><button class="on" data-t="notes">한 줄 감상</button><button data-t="wall">방명록</button></div>
+        <div style="overflow:auto;max-height:420px"><table class="wt" id="cmList"></table></div></div>
       <div class="tcard"><h3>🖼️ 작품 <span class="small" id="wCnt"></span></h3><div style="overflow:auto"><table class="wt" id="wt"></table></div></div>`;
     $("#mBack").onclick=()=>this.listView();
     $$("[data-copy]").forEach(b=>b.onclick=()=>{ const i=$("#"+b.dataset.copy); if(!i.value) return; i.select(); try{ navigator.clipboard.writeText(i.value).then(()=>toast("복사했어요!"),()=>{ document.execCommand("copy"); toast("복사했어요!"); }); }catch(e){ document.execCommand("copy"); toast("복사했어요!"); } });
@@ -1515,7 +1533,18 @@ const Teacher={
         try{ await DB.update("",{[`ex/${code}/works/${k}`]:null,[`img/${code}/${k}`]:null,[`ex/${code}/claps/${k}`]:null,[`ex/${code}/notes/${k}`]:null,[`ex/${code}/hidden/${k}`]:null}); toast("삭제했어요."); }catch(e){ toast(errText(e)); } }); };
     let lastW=null;
     this.un.push(DB.on(`ex/${code}/hidden`,h=>{ hidden=h||{}; drawWorks(lastW); }));
-    this.un.push(DB.on(`ex/${code}/works`,w=>{ lastW=w; drawWorks(w); }));
+    this.un.push(DB.on(`ex/${code}/works`,w=>{ lastW=w; drawWorks(w); drawCm(); }));
+    let cmT="notes", notesV=null, wallV=null;
+    const tm=x=>x?new Date(x).toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"}):"";
+    const drawCm=()=>{ const el=$("#cmList"); if(!el) return; let rows=[];
+      if(cmT==="notes"){ Object.entries(notesV||{}).forEach(([wid,ns])=>Object.entries(ns||{}).forEach(([nid,n])=>rows.push({p:`ex/${code}/notes/${wid}/${nid}`,where:((lastW||{})[wid]||{}).name||"(지운 작품)",n})) ); }
+      else Object.entries(wallV||{}).forEach(([mid,n])=>rows.push({p:`ex/${code}/wall/${mid}`,where:"방명록",n}));
+      rows.sort((a,b)=>(b.n.t||0)-(a.n.t||0));
+      el.innerHTML=rows.length?rows.map((r,i)=>`<tr><td style="width:120px" class="small">${esc(r.where)}</td><td><b>${esc(r.n.n)}</b> ${esc(r.n.m)}</td><td class="small" style="white-space:nowrap">${tm(r.n.t)}</td><td style="text-align:right"><button class="btn sm" data-i="${i}" style="background:#fde2e1;color:#b42318">삭제</button></td></tr>`).join(""):`<tr><td class="sub">아직 글이 없어요.</td></tr>`;
+      $$("#cmList [data-i]").forEach(b=>b.onclick=async()=>{ const r=rows[+b.dataset.i]; if(!await ask(`'${r.n.m}'\n이 글을 삭제할까요?`,"삭제")) return; DB.remove(r.p).then(()=>toast("삭제했어요.")).catch(e=>toast(errText(e))); }); };
+    $$("#cmTab button").forEach(b=>b.onclick=()=>{ cmT=b.dataset.t; $$("#cmTab button").forEach(x=>x.classList.toggle("on",x===b)); drawCm(); });
+    this.un.push(DB.on(`ex/${code}/notes`,v=>{ notesV=v; drawCm(); }));
+    this.un.push(DB.on(`ex/${code}/wall`,v=>{ wallV=v; drawCm(); }));
   }
 };
 
